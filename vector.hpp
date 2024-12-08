@@ -327,7 +327,7 @@ typename vector<T>::size_type vector<T>::size() const noexcept {
 
 template <typename T>
 typename vector<T>::size_type vector<T>::max_size() const noexcept {
-  return std::numeric_limits<size_type>::max() / sizeof(T);
+  return CATZ_VECTOR_MAX_SZ ;
 }
 
 template <typename T>
