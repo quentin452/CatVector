@@ -223,7 +223,7 @@ vector<T> &vector<T>::operator=(std::initializer_list<T> lst) {
 }
 
 template <typename T>
-void vector<T>::assign(typename vector<T>::size_type count, const T &value) {
+inline void vector<T>::assign(typename vector<T>::size_type count, const T &value) {
   size_type i;
   if (count > rsrv_sz) {
     rsrv_sz = count << 1;
@@ -234,7 +234,7 @@ void vector<T>::assign(typename vector<T>::size_type count, const T &value) {
 }
 
 template <typename T>
-void vector<T>::assign(typename vector<T>::iterator first, typename vector<T>::iterator last) {
+inline void vector<T>::assign(typename vector<T>::iterator first, typename vector<T>::iterator last) {
   ptrdiff_t count = last - first;
   if (count > static_cast<ptrdiff_t>(rsrv_sz)) {
     rsrv_sz = static_cast<size_type>(count) << 1;
@@ -247,7 +247,7 @@ void vector<T>::assign(typename vector<T>::iterator first, typename vector<T>::i
 }
 
 template <typename T>
-void vector<T>::assign(std::initializer_list<T> lst) {
+inline void vector<T>::assign(std::initializer_list<T> lst) {
   size_type i, count = lst.size();
   if (count > rsrv_sz) {
     rsrv_sz = count << 1;
@@ -336,7 +336,7 @@ typename vector<T>::size_type vector<T>::capacity() const noexcept {
 }
 
 template <typename T>
-void vector<T>::resize(typename vector<T>::size_type sz) {
+inline void vector<T>::resize(typename vector<T>::size_type sz) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
       rsrv_sz = sz;
@@ -350,7 +350,7 @@ void vector<T>::resize(typename vector<T>::size_type sz) {
 }
 
 template <typename T>
-void vector<T>::resize(typename vector<T>::size_type sz, const T &c) {
+inline void vector<T>::resize(typename vector<T>::size_type sz, const T &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
       rsrv_sz = sz;
@@ -366,7 +366,7 @@ void vector<T>::resize(typename vector<T>::size_type sz, const T &c) {
 }
 
 template <typename T>
-void vector<T>::reserve(typename vector<T>::size_type _sz) {
+inline void vector<T>::reserve(typename vector<T>::size_type _sz) {
   if (_sz > rsrv_sz) {
     rsrv_sz = _sz;
     reallocate();
@@ -374,7 +374,7 @@ void vector<T>::reserve(typename vector<T>::size_type _sz) {
 }
 
 template <typename T>
-void vector<T>::shrink_to_fit() {
+inline void vector<T>::shrink_to_fit() {
   rsrv_sz = vec_sz;
   reallocate();
 }
@@ -437,7 +437,7 @@ const T *vector<T>::data() const noexcept {
 
 template <typename T>
 template <class... Args>
-void vector<T>::emplace_back(Args &&...args) {
+inline void vector<T>::emplace_back(Args &&...args) {
   if (vec_sz == rsrv_sz) {
     rsrv_sz <<= 2;
     reallocate();
@@ -447,7 +447,7 @@ void vector<T>::emplace_back(Args &&...args) {
 }
 
 template <typename T>
-void vector<T>::push_back(const T &val) {
+inline void vector<T>::push_back(const T &val) {
   if (vec_sz == rsrv_sz) {
     rsrv_sz <<= 2;
     reallocate();
@@ -457,7 +457,7 @@ void vector<T>::push_back(const T &val) {
 }
 
 template <typename T>
-void vector<T>::push_back(T &&val) {
+inline void vector<T>::push_back(T &&val) {
   if (vec_sz == rsrv_sz) {
     rsrv_sz <<= 2;
     reallocate();
@@ -467,7 +467,7 @@ void vector<T>::push_back(T &&val) {
 }
 
 template <typename T>
-void vector<T>::pop_back() {
+inline void vector<T>::pop_back() {
   --vec_sz;
   arr[vec_sz].~T();
 }
@@ -567,7 +567,7 @@ typename vector<T>::iterator vector<T>::insert(
 }
 
 template <typename T>
-typename vector<T>::iterator vector<T>::erase(typename vector<T>::const_iterator it) {
+inline typename vector<T>::iterator vector<T>::erase(typename vector<T>::const_iterator it) {
   iterator iit = &arr[it - arr];
   (*iit).~T();
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(T));
@@ -576,7 +576,7 @@ typename vector<T>::iterator vector<T>::erase(typename vector<T>::const_iterator
 }
 
 template <typename T>
-typename vector<T>::iterator vector<T>::erase(
+inline typename vector<T>::iterator vector<T>::erase(
     typename vector<T>::const_iterator first, typename vector<T>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
@@ -587,7 +587,7 @@ typename vector<T>::iterator vector<T>::erase(
 }
 
 template <typename T>
-void vector<T>::swap(vector<T> &rhs) {
+inline void vector<T>::swap(vector<T> &rhs) {
   size_type tvec_sz = static_cast<size_type>(vec_sz);
   size_type trsrv_sz = static_cast<size_type>(rsrv_sz);
   T *tarr = arr;
@@ -602,7 +602,7 @@ void vector<T>::swap(vector<T> &rhs) {
 }
 
 template <typename T>
-void vector<T>::clear() noexcept {
+inline void vector<T>::clear() noexcept {
   size_type i;
   for (i = 0; i < vec_sz; ++i) arr[i].~T();
   vec_sz = 0;
@@ -659,7 +659,7 @@ bool vector<T>::operator>=(const vector<T> &rhs) const {
 }
 
 template <>
-void vector<bool>::resize(typename vector<bool>::size_type sz) {
+inline void vector<bool>::resize(typename vector<bool>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -668,7 +668,7 @@ void vector<bool>::resize(typename vector<bool>::size_type sz) {
 }
 
 template <>
-void vector<signed char>::resize(typename vector<signed char>::size_type sz) {
+inline void vector<signed char>::resize(typename vector<signed char>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -677,7 +677,7 @@ void vector<signed char>::resize(typename vector<signed char>::size_type sz) {
 }
 
 template <>
-void vector<unsigned char>::resize(typename vector<unsigned char>::size_type sz) {
+inline void vector<unsigned char>::resize(typename vector<unsigned char>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -686,7 +686,7 @@ void vector<unsigned char>::resize(typename vector<unsigned char>::size_type sz)
 }
 
 template <>
-void vector<char>::resize(typename vector<char>::size_type sz) {
+inline void vector<char>::resize(typename vector<char>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -695,7 +695,7 @@ void vector<char>::resize(typename vector<char>::size_type sz) {
 }
 
 template <>
-void vector<short int>::resize(typename vector<short int>::size_type sz) {
+inline void vector<short int>::resize(typename vector<short int>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -704,7 +704,7 @@ void vector<short int>::resize(typename vector<short int>::size_type sz) {
 }
 
 template <>
-void vector<unsigned short int>::resize(typename vector<unsigned short int>::size_type sz) {
+inline void vector<unsigned short int>::resize(typename vector<unsigned short int>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -713,7 +713,7 @@ void vector<unsigned short int>::resize(typename vector<unsigned short int>::siz
 }
 
 template <>
-void vector<int>::resize(typename vector<int>::size_type sz) {
+inline void vector<int>::resize(typename vector<int>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -722,7 +722,7 @@ void vector<int>::resize(typename vector<int>::size_type sz) {
 }
 
 template <>
-void vector<unsigned int>::resize(typename vector<unsigned int>::size_type sz) {
+inline void vector<unsigned int>::resize(typename vector<unsigned int>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -731,7 +731,7 @@ void vector<unsigned int>::resize(typename vector<unsigned int>::size_type sz) {
 }
 
 template <>
-void vector<long int>::resize(typename vector<long int>::size_type sz) {
+inline void vector<long int>::resize(typename vector<long int>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -740,7 +740,7 @@ void vector<long int>::resize(typename vector<long int>::size_type sz) {
 }
 
 template <>
-void vector<unsigned long int>::resize(typename vector<unsigned long int>::size_type sz) {
+inline void vector<unsigned long int>::resize(typename vector<unsigned long int>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -749,7 +749,7 @@ void vector<unsigned long int>::resize(typename vector<unsigned long int>::size_
 }
 
 template <>
-void vector<long long int>::resize(typename vector<long long int>::size_type sz) {
+inline void vector<long long int>::resize(typename vector<long long int>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -758,7 +758,7 @@ void vector<long long int>::resize(typename vector<long long int>::size_type sz)
 }
 
 template <>
-void vector<unsigned long long int>::resize(typename vector<unsigned long long int>::size_type sz) {
+inline void vector<unsigned long long int>::resize(typename vector<unsigned long long int>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -767,7 +767,7 @@ void vector<unsigned long long int>::resize(typename vector<unsigned long long i
 }
 
 template <>
-void vector<float>::resize(typename vector<float>::size_type sz) {
+inline void vector<float>::resize(typename vector<float>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -776,7 +776,7 @@ void vector<float>::resize(typename vector<float>::size_type sz) {
 }
 
 template <>
-void vector<double>::resize(typename vector<double>::size_type sz) {
+inline void vector<double>::resize(typename vector<double>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -785,7 +785,7 @@ void vector<double>::resize(typename vector<double>::size_type sz) {
 }
 
 template <>
-void vector<long double>::resize(typename vector<long double>::size_type sz) {
+inline void vector<long double>::resize(typename vector<long double>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -794,7 +794,7 @@ void vector<long double>::resize(typename vector<long double>::size_type sz) {
 }
 
 template <>
-void vector<bool>::resize(typename vector<bool>::size_type sz, const bool &c) {
+inline void vector<bool>::resize(typename vector<bool>::size_type sz, const bool &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
       rsrv_sz = sz;
@@ -807,7 +807,7 @@ void vector<bool>::resize(typename vector<bool>::size_type sz, const bool &c) {
 }
 
 template <>
-void vector<signed char>::resize(typename vector<signed char>::size_type sz, const signed char &c) {
+inline void vector<signed char>::resize(typename vector<signed char>::size_type sz, const signed char &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
       rsrv_sz = sz;
@@ -820,7 +820,7 @@ void vector<signed char>::resize(typename vector<signed char>::size_type sz, con
 }
 
 template <>
-void vector<unsigned char>::resize(
+inline void vector<unsigned char>::resize(
     typename vector<unsigned char>::size_type sz, const unsigned char &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
@@ -834,7 +834,7 @@ void vector<unsigned char>::resize(
 }
 
 template <>
-void vector<char>::resize(typename vector<char>::size_type sz, const char &c) {
+inline void vector<char>::resize(typename vector<char>::size_type sz, const char &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
       rsrv_sz = sz;
@@ -847,7 +847,7 @@ void vector<char>::resize(typename vector<char>::size_type sz, const char &c) {
 }
 
 template <>
-void vector<short int>::resize(typename vector<short int>::size_type sz, const short int &c) {
+inline void vector<short int>::resize(typename vector<short int>::size_type sz, const short int &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
       rsrv_sz = sz;
@@ -860,7 +860,7 @@ void vector<short int>::resize(typename vector<short int>::size_type sz, const s
 }
 
 template <>
-void vector<unsigned short int>::resize(
+inline void vector<unsigned short int>::resize(
     typename vector<unsigned short int>::size_type sz, const unsigned short int &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
@@ -874,7 +874,7 @@ void vector<unsigned short int>::resize(
 }
 
 template <>
-void vector<int>::resize(typename vector<int>::size_type sz, const int &c) {
+inline void vector<int>::resize(typename vector<int>::size_type sz, const int &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
       rsrv_sz = sz;
@@ -887,7 +887,7 @@ void vector<int>::resize(typename vector<int>::size_type sz, const int &c) {
 }
 
 template <>
-void vector<unsigned int>::resize(
+inline void vector<unsigned int>::resize(
     typename vector<unsigned int>::size_type sz, const unsigned int &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
@@ -901,7 +901,7 @@ void vector<unsigned int>::resize(
 }
 
 template <>
-void vector<long int>::resize(typename vector<long int>::size_type sz, const long int &c) {
+inline void vector<long int>::resize(typename vector<long int>::size_type sz, const long int &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
       rsrv_sz = sz;
@@ -914,7 +914,7 @@ void vector<long int>::resize(typename vector<long int>::size_type sz, const lon
 }
 
 template <>
-void vector<unsigned long int>::resize(
+inline void vector<unsigned long int>::resize(
     typename vector<unsigned long int>::size_type sz, const unsigned long int &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
@@ -928,7 +928,7 @@ void vector<unsigned long int>::resize(
 }
 
 template <>
-void vector<long long int>::resize(
+inline void vector<long long int>::resize(
     typename vector<long long int>::size_type sz, const long long int &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
@@ -942,7 +942,7 @@ void vector<long long int>::resize(
 }
 
 template <>
-void vector<unsigned long long int>::resize(
+inline void vector<unsigned long long int>::resize(
     typename vector<unsigned long long int>::size_type sz, const unsigned long long int &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
@@ -956,7 +956,7 @@ void vector<unsigned long long int>::resize(
 }
 
 template <>
-void vector<float>::resize(typename vector<float>::size_type sz, const float &c) {
+inline void vector<float>::resize(typename vector<float>::size_type sz, const float &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
       rsrv_sz = sz;
@@ -969,7 +969,7 @@ void vector<float>::resize(typename vector<float>::size_type sz, const float &c)
 }
 
 template <>
-void vector<double>::resize(typename vector<double>::size_type sz, const double &c) {
+inline void vector<double>::resize(typename vector<double>::size_type sz, const double &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
       rsrv_sz = sz;
@@ -982,7 +982,7 @@ void vector<double>::resize(typename vector<double>::size_type sz, const double 
 }
 
 template <>
-void vector<long double>::resize(typename vector<long double>::size_type sz, const long double &c) {
+inline void vector<long double>::resize(typename vector<long double>::size_type sz, const long double &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
       rsrv_sz = sz;
@@ -995,82 +995,82 @@ void vector<long double>::resize(typename vector<long double>::size_type sz, con
 }
 
 template <>
-void vector<bool>::pop_back() {
+inline void vector<bool>::pop_back() {
   --vec_sz;
 }
 
 template <>
-void vector<signed char>::pop_back() {
+inline void vector<signed char>::pop_back() {
   --vec_sz;
 }
 
 template <>
-void vector<unsigned char>::pop_back() {
+inline void vector<unsigned char>::pop_back() {
   --vec_sz;
 }
 
 template <>
-void vector<char>::pop_back() {
+inline void vector<char>::pop_back() {
   --vec_sz;
 }
 
 template <>
-void vector<short int>::pop_back() {
+inline void vector<short int>::pop_back() {
   --vec_sz;
 }
 
 template <>
-void vector<unsigned short int>::pop_back() {
+inline void vector<unsigned short int>::pop_back() {
   --vec_sz;
 }
 
 template <>
-void vector<int>::pop_back() {
+inline void vector<int>::pop_back() {
   --vec_sz;
 }
 
 template <>
-void vector<unsigned int>::pop_back() {
+inline void vector<unsigned int>::pop_back() {
   --vec_sz;
 }
 
 template <>
-void vector<long int>::pop_back() {
+inline void vector<long int>::pop_back() {
   --vec_sz;
 }
 
 template <>
-void vector<unsigned long int>::pop_back() {
+inline void vector<unsigned long int>::pop_back() {
   --vec_sz;
 }
 
 template <>
-void vector<long long int>::pop_back() {
+inline void vector<long long int>::pop_back() {
   --vec_sz;
 }
 
 template <>
-void vector<unsigned long long int>::pop_back() {
+inline void vector<unsigned long long int>::pop_back() {
   --vec_sz;
 }
 
 template <>
-void vector<float>::pop_back() {
+inline void vector<float>::pop_back() {
   --vec_sz;
 }
 
 template <>
-void vector<double>::pop_back() {
+inline void vector<double>::pop_back() {
   --vec_sz;
 }
 
 template <>
-void vector<long double>::pop_back() {
+inline void vector<long double>::pop_back() {
   --vec_sz;
 }
 
 template <>
-typename vector<bool>::iterator vector<bool>::erase(typename vector<bool>::const_iterator it) {
+inline typename vector<bool>::iterator vector<bool>::erase(typename vector<bool>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(bool));
   --vec_sz;
@@ -1078,7 +1078,7 @@ typename vector<bool>::iterator vector<bool>::erase(typename vector<bool>::const
 }
 
 template <>
-typename vector<signed char>::iterator vector<signed char>::erase(
+inline typename vector<signed char>::iterator vector<signed char>::erase(
     typename vector<signed char>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(signed char));
@@ -1087,7 +1087,7 @@ typename vector<signed char>::iterator vector<signed char>::erase(
 }
 
 template <>
-typename vector<unsigned char>::iterator vector<unsigned char>::erase(
+inline typename vector<unsigned char>::iterator vector<unsigned char>::erase(
     typename vector<unsigned char>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(unsigned char));
@@ -1096,7 +1096,7 @@ typename vector<unsigned char>::iterator vector<unsigned char>::erase(
 }
 
 template <>
-typename vector<char>::iterator vector<char>::erase(typename vector<char>::const_iterator it) {
+inline typename vector<char>::iterator vector<char>::erase(typename vector<char>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(char));
   --vec_sz;
@@ -1104,7 +1104,7 @@ typename vector<char>::iterator vector<char>::erase(typename vector<char>::const
 }
 
 template <>
-typename vector<short int>::iterator vector<short int>::erase(
+inline typename vector<short int>::iterator vector<short int>::erase(
     typename vector<short int>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(short int));
@@ -1113,7 +1113,7 @@ typename vector<short int>::iterator vector<short int>::erase(
 }
 
 template <>
-typename vector<unsigned short int>::iterator vector<unsigned short int>::erase(
+inline typename vector<unsigned short int>::iterator vector<unsigned short int>::erase(
     typename vector<unsigned short int>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(unsigned short int));
@@ -1122,7 +1122,7 @@ typename vector<unsigned short int>::iterator vector<unsigned short int>::erase(
 }
 
 template <>
-typename vector<int>::iterator vector<int>::erase(typename vector<int>::const_iterator it) {
+inline typename vector<int>::iterator vector<int>::erase(typename vector<int>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(int));
   --vec_sz;
@@ -1130,7 +1130,7 @@ typename vector<int>::iterator vector<int>::erase(typename vector<int>::const_it
 }
 
 template <>
-typename vector<unsigned int>::iterator vector<unsigned int>::erase(
+inline typename vector<unsigned int>::iterator vector<unsigned int>::erase(
     typename vector<unsigned int>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(unsigned int));
@@ -1139,7 +1139,7 @@ typename vector<unsigned int>::iterator vector<unsigned int>::erase(
 }
 
 template <>
-typename vector<long int>::iterator vector<long int>::erase(
+inline typename vector<long int>::iterator vector<long int>::erase(
     typename vector<long int>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(long int));
@@ -1148,7 +1148,7 @@ typename vector<long int>::iterator vector<long int>::erase(
 }
 
 template <>
-typename vector<unsigned long int>::iterator vector<unsigned long int>::erase(
+inline typename vector<unsigned long int>::iterator vector<unsigned long int>::erase(
     typename vector<unsigned long int>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(unsigned long int));
@@ -1157,7 +1157,7 @@ typename vector<unsigned long int>::iterator vector<unsigned long int>::erase(
 }
 
 template <>
-typename vector<long long int>::iterator vector<long long int>::erase(
+inline typename vector<long long int>::iterator vector<long long int>::erase(
     typename vector<long long int>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(long long int));
@@ -1166,7 +1166,7 @@ typename vector<long long int>::iterator vector<long long int>::erase(
 }
 
 template <>
-typename vector<unsigned long long int>::iterator vector<unsigned long long int>::erase(
+inline typename vector<unsigned long long int>::iterator vector<unsigned long long int>::erase(
     typename vector<unsigned long long int>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(unsigned long long int));
@@ -1175,7 +1175,7 @@ typename vector<unsigned long long int>::iterator vector<unsigned long long int>
 }
 
 template <>
-typename vector<float>::iterator vector<float>::erase(typename vector<float>::const_iterator it) {
+inline typename vector<float>::iterator vector<float>::erase(typename vector<float>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(float));
   --vec_sz;
@@ -1183,7 +1183,7 @@ typename vector<float>::iterator vector<float>::erase(typename vector<float>::co
 }
 
 template <>
-typename vector<double>::iterator vector<double>::erase(
+inline typename vector<double>::iterator vector<double>::erase(
     typename vector<double>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(double));
@@ -1192,7 +1192,7 @@ typename vector<double>::iterator vector<double>::erase(
 }
 
 template <>
-typename vector<long double>::iterator vector<long double>::erase(
+inline typename vector<long double>::iterator vector<long double>::erase(
     typename vector<long double>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(long double));
@@ -1201,7 +1201,7 @@ typename vector<long double>::iterator vector<long double>::erase(
 }
 
 template <>
-typename vector<bool>::iterator vector<bool>::erase(
+inline typename vector<bool>::iterator vector<bool>::erase(
     typename vector<bool>::const_iterator first, typename vector<bool>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
@@ -1212,7 +1212,7 @@ typename vector<bool>::iterator vector<bool>::erase(
 }
 
 template <>
-typename vector<signed char>::iterator vector<signed char>::erase(
+inline typename vector<signed char>::iterator vector<signed char>::erase(
     typename vector<signed char>::const_iterator first,
     typename vector<signed char>::const_iterator last) {
   iterator f = &arr[first - arr];
@@ -1224,7 +1224,7 @@ typename vector<signed char>::iterator vector<signed char>::erase(
 }
 
 template <>
-typename vector<unsigned char>::iterator vector<unsigned char>::erase(
+inline typename vector<unsigned char>::iterator vector<unsigned char>::erase(
     typename vector<unsigned char>::const_iterator first,
     typename vector<unsigned char>::const_iterator last) {
   iterator f = &arr[first - arr];
@@ -1236,7 +1236,7 @@ typename vector<unsigned char>::iterator vector<unsigned char>::erase(
 }
 
 template <>
-typename vector<char>::iterator vector<char>::erase(
+inline typename vector<char>::iterator vector<char>::erase(
     typename vector<char>::const_iterator first, typename vector<char>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
@@ -1247,7 +1247,7 @@ typename vector<char>::iterator vector<char>::erase(
 }
 
 template <>
-typename vector<short int>::iterator vector<short int>::erase(
+inline typename vector<short int>::iterator vector<short int>::erase(
     typename vector<short int>::const_iterator first,
     typename vector<short int>::const_iterator last) {
   iterator f = &arr[first - arr];
@@ -1259,7 +1259,7 @@ typename vector<short int>::iterator vector<short int>::erase(
 }
 
 template <>
-typename vector<unsigned short int>::iterator vector<unsigned short int>::erase(
+inline typename vector<unsigned short int>::iterator vector<unsigned short int>::erase(
     typename vector<unsigned short int>::const_iterator first,
     typename vector<unsigned short int>::const_iterator last) {
   iterator f = &arr[first - arr];
@@ -1271,7 +1271,7 @@ typename vector<unsigned short int>::iterator vector<unsigned short int>::erase(
 }
 
 template <>
-typename vector<int>::iterator vector<int>::erase(
+inline typename vector<int>::iterator vector<int>::erase(
     typename vector<int>::const_iterator first, typename vector<int>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
@@ -1282,7 +1282,7 @@ typename vector<int>::iterator vector<int>::erase(
 }
 
 template <>
-typename vector<unsigned int>::iterator vector<unsigned int>::erase(
+inline typename vector<unsigned int>::iterator vector<unsigned int>::erase(
     typename vector<unsigned int>::const_iterator first,
     typename vector<unsigned int>::const_iterator last) {
   iterator f = &arr[first - arr];
@@ -1294,7 +1294,7 @@ typename vector<unsigned int>::iterator vector<unsigned int>::erase(
 }
 
 template <>
-typename vector<long long int>::iterator vector<long long int>::erase(
+inline typename vector<long long int>::iterator vector<long long int>::erase(
     typename vector<long long int>::const_iterator first,
     typename vector<long long int>::const_iterator last) {
   iterator f = &arr[first - arr];
@@ -1306,7 +1306,7 @@ typename vector<long long int>::iterator vector<long long int>::erase(
 }
 
 template <>
-typename vector<unsigned long long int>::iterator vector<unsigned long long int>::erase(
+inline typename vector<unsigned long long int>::iterator vector<unsigned long long int>::erase(
     typename vector<unsigned long long int>::const_iterator first,
     typename vector<unsigned long long int>::const_iterator last) {
   iterator f = &arr[first - arr];
@@ -1318,7 +1318,7 @@ typename vector<unsigned long long int>::iterator vector<unsigned long long int>
 }
 
 template <>
-typename vector<float>::iterator vector<float>::erase(
+inline typename vector<float>::iterator vector<float>::erase(
     typename vector<float>::const_iterator first, typename vector<float>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
@@ -1329,7 +1329,7 @@ typename vector<float>::iterator vector<float>::erase(
 }
 
 template <>
-typename vector<double>::iterator vector<double>::erase(
+inline typename vector<double>::iterator vector<double>::erase(
     typename vector<double>::const_iterator first, typename vector<double>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
@@ -1340,7 +1340,7 @@ typename vector<double>::iterator vector<double>::erase(
 }
 
 template <>
-typename vector<long double>::iterator vector<long double>::erase(
+inline typename vector<long double>::iterator vector<long double>::erase(
     typename vector<long double>::const_iterator first,
     typename vector<long double>::const_iterator last) {
   iterator f = &arr[first - arr];
@@ -1352,82 +1352,82 @@ typename vector<long double>::iterator vector<long double>::erase(
 }
 
 template <>
-void vector<bool>::clear() noexcept {
+inline void vector<bool>::clear() noexcept {
   vec_sz = 0;
 }
 
 template <>
-void vector<signed char>::clear() noexcept {
+inline void vector<signed char>::clear() noexcept {
   vec_sz = 0;
 }
 
 template <>
-void vector<unsigned char>::clear() noexcept {
+inline void vector<unsigned char>::clear() noexcept {
   vec_sz = 0;
 }
 
 template <>
-void vector<char>::clear() noexcept {
+inline void vector<char>::clear() noexcept {
   vec_sz = 0;
 }
 
 template <>
-void vector<short int>::clear() noexcept {
+inline void vector<short int>::clear() noexcept {
   vec_sz = 0;
 }
 
 template <>
-void vector<unsigned short int>::clear() noexcept {
+inline void vector<unsigned short int>::clear() noexcept {
   vec_sz = 0;
 }
 
 template <>
-void vector<int>::clear() noexcept {
+inline void vector<int>::clear() noexcept {
   vec_sz = 0;
 }
 
 template <>
-void vector<unsigned int>::clear() noexcept {
+inline void vector<unsigned int>::clear() noexcept {
   vec_sz = 0;
 }
 
 template <>
-void vector<long int>::clear() noexcept {
+inline void vector<long int>::clear() noexcept {
   vec_sz = 0;
 }
 
 template <>
-void vector<unsigned long int>::clear() noexcept {
+inline void vector<unsigned long int>::clear() noexcept {
   vec_sz = 0;
 }
 
 template <>
-void vector<long long int>::clear() noexcept {
+inline void vector<long long int>::clear() noexcept {
   vec_sz = 0;
 }
 
 template <>
-void vector<unsigned long long int>::clear() noexcept {
+inline void vector<unsigned long long int>::clear() noexcept {
   vec_sz = 0;
 }
 
 template <>
-void vector<float>::clear() noexcept {
+inline void vector<float>::clear() noexcept {
   vec_sz = 0;
 }
 
 template <>
-void vector<double>::clear() noexcept {
+inline void vector<double>::clear() noexcept {
   vec_sz = 0;
 }
 
 template <>
-void vector<long double>::clear() noexcept {
+inline void vector<long double>::clear() noexcept {
   vec_sz = 0;
 }
 
 template <typename T>
-void Print(const vector<T> &v, const std::string &vec_name) {
+inline void Print(const vector<T> &v, const std::string &vec_name) {
   for (typename vector<T>::size_type i = 0; i < v.size(); i++) {
     std::cout << vec_name << "[" << i << "] = " << v[i] << std::endl;
   }

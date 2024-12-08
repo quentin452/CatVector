@@ -5,15 +5,16 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall")
 
 if (MSVC)
-    add_compile_options(/wd5045)  # Disable C5045 warning
+    add_compile_options(/wd5045)  # Disable C5045 warnings
+    add_compile_options(/wd4514)  # Disable C4514 warnings
 endif()
 
 # Add executables
-add_executable(tester tester.cpp)
-add_executable(mytester mytester.cpp)
+add_executable(tester vector.cpp tester.cpp)
+add_executable(mytester vector.cpp mytester.cpp)
 
 # Define DEBUG target
-add_executable(dbg tester.cpp)
+add_executable(dbg vector.cpp tester.cpp)
 target_compile_definitions(dbg PRIVATE DEBUG)
 
 # Custom clean target
