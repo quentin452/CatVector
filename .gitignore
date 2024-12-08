@@ -17,3 +17,4 @@ Release/
 *.vcxproj.filters
 *.sln
 *.VC.db
+/.vscode
