@@ -5,7 +5,6 @@
 
 #include "vector.hpp"
 
-
 using std::cout;
 using std::endl;
 
@@ -16,14 +15,14 @@ int main(int argc, char* argv[]) {
     cout << "exiting ... " << endl;
     exit(1);
   }
-  srand(time(NULL));
+  srand(static_cast<unsigned int>(time(NULL)));
   vector_type::vector<int> v1;
 
   cout << "##v1 -> capacity = " << v1.capacity() << " ,size = " << v1.size() << endl;
 
   int N = atoi(argv[1]);
   for (auto i = 0; i < N; i++) {
-    v1.push_back(rand() % 100);
+    v1.emplace_back(rand() % 100);
     // cout << "v1 -> capacity = " << v1.capacity() <<" ,size = " << v1.size() << endl;
   }
 
@@ -41,7 +40,7 @@ int main(int argc, char* argv[]) {
   v3 = {6, 7, 8, 9};
   lni::Print(v3, "v3");
 
-  vector_type::vector<int> v4(5, 1.0);
+  vector_type::vector<int> v4(5, 1);
   lni::Print(v4, "v4");
   v4.assign(v3.begin(), v3.end());
   lni::Print(v4, "v4");

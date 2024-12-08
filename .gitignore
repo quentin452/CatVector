@@ -1,5 +1,4 @@
 *.exe
-*.txt
 tester
 dbg
 std_*
@@ -18,3 +17,4 @@ Release/
 *.sln
 *.VC.db
 /.vscode
+/build

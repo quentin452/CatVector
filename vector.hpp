@@ -6,10 +6,10 @@
 #include <string>
 #include <utility>
 
-#ifndef LNI_VECTOR
-#define LNI_VECTOR
+#ifndef CATZ_VECTOR
+#define CATZ_VECTOR
 
-#define LNI_VECTOR_MAX_SZ 1000000000
+#define CATZ_VECTOR_MAX_SZ 1000000000
 
 namespace lni {
 
@@ -33,8 +33,7 @@ class vector {
   vector() noexcept;
   explicit vector(size_type n);
   vector(size_type n, const T &val);
-  template <class InputIt>
-  vector(InputIt first, InputIt last);  // v1(v2.begin(),v2.end())
+  vector(typename vector<T>::iterator first, typename vector<T>::iterator last);
   vector(std::initializer_list<T>);
   vector(const vector<T> &);
   vector(vector<T> &&) noexcept;
@@ -43,8 +42,7 @@ class vector {
   vector<T> &operator=(vector<T> &&);
   vector<T> &operator=(std::initializer_list<T>);
   void assign(size_type, const T &value);
-  template <class InputIt>
-  void assign(InputIt, InputIt);
+  void assign(typename vector<T>::iterator, typename vector<T>::iterator);
   void assign(std::initializer_list<T>);
 
   // iterators:
@@ -108,7 +106,7 @@ class vector {
   bool operator>(const vector<T> &) const;
   bool operator>=(const vector<T> &) const;
 
-  friend void Print(const vector<T> &, std::string);
+  friend void Print(const vector<T> &v, const std::string &vec_name);
 
  private:
   size_type rsrv_sz = 4;
@@ -126,7 +124,7 @@ vector<T>::vector() noexcept {
 template <typename T>
 vector<T>::vector(typename vector<T>::size_type n) {
   size_type i;
-  rsrv_sz = n << 2;
+  rsrv_sz = n << 1;
   arr = new T[rsrv_sz];
   for (i = 0; i < n; ++i) arr[i] = T();
   vec_sz = n;
@@ -135,29 +133,29 @@ vector<T>::vector(typename vector<T>::size_type n) {
 template <typename T>
 vector<T>::vector(typename vector<T>::size_type n, const T &value) {
   size_type i;
-  rsrv_sz = n << 2;
+  rsrv_sz = n << 1;
   arr = new T[rsrv_sz];
   for (i = 0; i < n; ++i) arr[i] = value;
   vec_sz = n;
 }
 
 template <typename T>
-template <class InputIt>
-vector<T>::vector(InputIt first, InputIt last) {
+vector<T>::vector(typename vector<T>::iterator first, typename vector<T>::iterator last) {
   std::cout << "Inside ... \n";
-  size_type i, count = last - first;
+  size_type count = static_cast<size_type>(last - first);
   std::cout << "count =" << count << std::endl;
-  rsrv_sz = count << 2;
+  rsrv_sz = count << 1;
   vec_sz = count;
   arr = new T[rsrv_sz];
-  for (i = 0; i < count; ++i, ++first) arr[i] = *first;
+  for (size_type i = 0; i < count; ++i, ++first) arr[i] = *first;
+  vec_sz = count;
 }
 
 template <typename T>
 vector<T>::vector(std::initializer_list<T> lst) {
-  rsrv_sz = lst.size() << 2;
+  rsrv_sz = static_cast<size_type>(lst.size()) << 1;
   arr = new T[rsrv_sz];
-  for (auto &item : lst) arr[vec_sz++] = item;
+  for (const auto &item : lst) arr[vec_sz++] = item;
 }
 
 template <typename T>
@@ -190,7 +188,7 @@ vector<T> &vector<T>::operator=(const vector<T> &other) {
   }
   size_type i;
   if (rsrv_sz < other.vec_sz) {
-    rsrv_sz = other.vec_sz << 2;
+    rsrv_sz = other.vec_sz << 1;
     reallocate();
   }
   for (i = 0; i < other.vec_sz; ++i) arr[i] = other.arr[i];
@@ -202,7 +200,7 @@ template <typename T>
 vector<T> &vector<T>::operator=(vector<T> &&other) {
   size_type i;
   if (rsrv_sz < other.vec_sz) {
-    rsrv_sz = other.vec_sz << 2;
+    rsrv_sz = other.vec_sz << 1;
     reallocate();
   }
   for (i = 0; i < other.vec_sz; ++i) arr[i] = std::move(other.arr[i]);
@@ -212,8 +210,9 @@ vector<T> &vector<T>::operator=(vector<T> &&other) {
 
 template <typename T>
 vector<T> &vector<T>::operator=(std::initializer_list<T> lst) {
-  if (rsrv_sz < lst.size()) {
-    rsrv_sz = lst.size() << 2;
+  size_type new_size = static_cast<size_type>(lst.size());
+  if (rsrv_sz < new_size) {
+    rsrv_sz = new_size << 1;
     reallocate();
   }
   vec_sz = 0;
@@ -225,7 +224,7 @@ template <typename T>
 void vector<T>::assign(typename vector<T>::size_type count, const T &value) {
   size_type i;
   if (count > rsrv_sz) {
-    rsrv_sz = count << 2;
+    rsrv_sz = count << 1;
     reallocate();
   }
   for (i = 0; i < count; ++i) arr[i] = value;
@@ -233,22 +232,23 @@ void vector<T>::assign(typename vector<T>::size_type count, const T &value) {
 }
 
 template <typename T>
-template <class InputIt>
-void vector<T>::assign(InputIt first, InputIt last) {
-  size_type i, count = last - first;
-  if (count > rsrv_sz) {
-    rsrv_sz = count << 2;
+void vector<T>::assign(typename vector<T>::iterator first, typename vector<T>::iterator last) {
+  ptrdiff_t count = last - first;
+  if (count > static_cast<ptrdiff_t>(rsrv_sz)) {
+    rsrv_sz = static_cast<size_type>(count) << 1;
     reallocate();
   }
-  for (i = 0; i < count; ++i, ++first) arr[i] = *first;
-  vec_sz = count;
+  for (size_type i = 0; i < static_cast<size_type>(count); ++i, ++first) {
+    arr[i] = *first;
+  }
+  vec_sz = static_cast<size_type>(count);
 }
 
 template <typename T>
 void vector<T>::assign(std::initializer_list<T> lst) {
   size_type i, count = lst.size();
   if (count > rsrv_sz) {
-    rsrv_sz = count << 2;
+    rsrv_sz = count << 1;
     reallocate();
   }
   i = 0;
@@ -315,7 +315,7 @@ typename vector<T>::size_type vector<T>::size() const noexcept {
 
 template <typename T>
 typename vector<T>::size_type vector<T>::max_size() const noexcept {
-  return LNI_VECTOR_MAX_SZ;
+  return CATZ_VECTOR_MAX_SZ;
 }
 
 template <typename T>
@@ -508,12 +508,12 @@ typename vector<T>::iterator vector<T>::insert(
   iterator f = &arr[it - arr];
   if (!cnt) return f;
   if (vec_sz + cnt > rsrv_sz) {
-    rsrv_sz = (vec_sz + cnt) << 2;
+    rsrv_sz = static_cast<size_type>(vec_sz + cnt) << 1;
     reallocate();
   }
   memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
   vec_sz += cnt;
-  for (iterator it = f; cnt--; ++it) (*it) = val;
+  for (iterator iter = f; cnt--; ++iter) (*iter) = val;
   return f;
 }
 
@@ -522,14 +522,14 @@ template <class InputIt>
 typename vector<T>::iterator vector<T>::insert(
     typename vector<T>::const_iterator it, InputIt first, InputIt last) {
   iterator f = &arr[it - arr];
-  size_type cnt = last - first;
+  size_type cnt = static_cast<size_type>(last - first);
   if (!cnt) return f;
   if (vec_sz + cnt > rsrv_sz) {
-    rsrv_sz = (vec_sz + cnt) << 2;
+    rsrv_sz = static_cast<size_type>(vec_sz + cnt) << 1;
     reallocate();
   }
   memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
-  for (iterator it = f; first != last; ++it, ++first) (*it) = *first;
+  for (iterator iter = f; first != last; ++iter, ++first) (*iter) = *first;
   vec_sz += cnt;
   return f;
 }
@@ -537,11 +537,11 @@ typename vector<T>::iterator vector<T>::insert(
 template <typename T>
 typename vector<T>::iterator vector<T>::insert(
     typename vector<T>::const_iterator it, std::initializer_list<T> lst) {
-  size_type cnt = lst.size();
+  size_type cnt = static_cast<size_type>(lst.size());
   iterator f = &arr[it - arr];
   if (!cnt) return f;
   if (vec_sz + cnt > rsrv_sz) {
-    rsrv_sz = (vec_sz + cnt) << 2;
+    rsrv_sz = static_cast<size_type>(vec_sz + cnt) << 1;
     reallocate();
   }
   memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
@@ -576,11 +576,12 @@ typename vector<T>::iterator vector<T>::erase(
 
 template <typename T>
 void vector<T>::swap(vector<T> &rhs) {
-  size_t tvec_sz = vec_sz, trsrv_sz = rsrv_sz;
+  size_type tvec_sz = static_cast<size_type>(vec_sz);
+  size_type trsrv_sz = static_cast<size_type>(rsrv_sz);
   T *tarr = arr;
 
-  vec_sz = rhs.vec_sz;
-  rsrv_sz = rhs.rsrv_sz;
+  vec_sz = static_cast<size_type>(rhs.vec_sz);
+  rsrv_sz = static_cast<size_type>(rhs.rsrv_sz);
   arr = rhs.arr;
 
   rhs.vec_sz = tvec_sz;
@@ -615,7 +616,7 @@ bool vector<T>::operator!=(const vector<T> &rhs) const {
 
 template <typename T>
 bool vector<T>::operator<(const vector<T> &rhs) const {
-  size_type i, j, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
+  size_type i, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
   for (i = 0; i < ub; ++i)
     if (arr[i] != rhs.arr[i]) return arr[i] < rhs.arr[i];
   return vec_sz < rhs.vec_sz;
@@ -623,7 +624,7 @@ bool vector<T>::operator<(const vector<T> &rhs) const {
 
 template <typename T>
 bool vector<T>::operator<=(const vector<T> &rhs) const {
-  size_type i, j, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
+  size_type i, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
   for (i = 0; i < ub; ++i)
     if (arr[i] != rhs.arr[i]) return arr[i] < rhs.arr[i];
   return vec_sz <= rhs.vec_sz;
@@ -631,7 +632,7 @@ bool vector<T>::operator<=(const vector<T> &rhs) const {
 
 template <typename T>
 bool vector<T>::operator>(const vector<T> &rhs) const {
-  size_type i, j, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
+  size_type i, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
   for (i = 0; i < ub; ++i)
     if (arr[i] != rhs.arr[i]) return arr[i] > rhs.arr[i];
   return vec_sz > rhs.vec_sz;
@@ -639,7 +640,7 @@ bool vector<T>::operator>(const vector<T> &rhs) const {
 
 template <typename T>
 bool vector<T>::operator>=(const vector<T> &rhs) const {
-  size_type i, j, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
+  size_type i, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
   for (i = 0; i < ub; ++i)
     if (arr[i] != rhs.arr[i]) return arr[i] > rhs.arr[i];
   return vec_sz >= rhs.vec_sz;
@@ -1192,8 +1193,9 @@ typename vector<bool>::iterator vector<bool>::erase(
     typename vector<bool>::const_iterator first, typename vector<bool>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
+  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(bool));
-  vec_sz -= last - first;
+  vec_sz -= static_cast<size_type>(diff);
   return f;
 }
 
@@ -1203,8 +1205,9 @@ typename vector<signed char>::iterator vector<signed char>::erase(
     typename vector<signed char>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
+  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(signed char));
-  vec_sz -= last - first;
+  vec_sz -= static_cast<size_type>(diff);
   return f;
 }
 
@@ -1214,8 +1217,9 @@ typename vector<unsigned char>::iterator vector<unsigned char>::erase(
     typename vector<unsigned char>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
+  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(unsigned char));
-  vec_sz -= last - first;
+  vec_sz -= static_cast<size_type>(diff);
   return f;
 }
 
@@ -1224,8 +1228,9 @@ typename vector<char>::iterator vector<char>::erase(
     typename vector<char>::const_iterator first, typename vector<char>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
+  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(char));
-  vec_sz -= last - first;
+  vec_sz -= static_cast<size_type>(diff);
   return f;
 }
 
@@ -1235,8 +1240,9 @@ typename vector<short int>::iterator vector<short int>::erase(
     typename vector<short int>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
+  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(short int));
-  vec_sz -= last - first;
+  vec_sz -= static_cast<size_type>(diff);
   return f;
 }
 
@@ -1246,8 +1252,9 @@ typename vector<unsigned short int>::iterator vector<unsigned short int>::erase(
     typename vector<unsigned short int>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
+  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(unsigned short int));
-  vec_sz -= last - first;
+  vec_sz -= static_cast<size_type>(diff);
   return f;
 }
 
@@ -1256,8 +1263,9 @@ typename vector<int>::iterator vector<int>::erase(
     typename vector<int>::const_iterator first, typename vector<int>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
+  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(int));
-  vec_sz -= last - first;
+  vec_sz -= static_cast<size_type>(diff);
   return f;
 }
 
@@ -1267,8 +1275,9 @@ typename vector<unsigned int>::iterator vector<unsigned int>::erase(
     typename vector<unsigned int>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
+  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(unsigned int));
-  vec_sz -= last - first;
+  vec_sz -= static_cast<size_type>(diff);
   return f;
 }
 
@@ -1278,8 +1287,9 @@ typename vector<long long int>::iterator vector<long long int>::erase(
     typename vector<long long int>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
+  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(long long int));
-  vec_sz -= last - first;
+  vec_sz -= static_cast<size_type>(diff);
   return f;
 }
 
@@ -1289,8 +1299,9 @@ typename vector<unsigned long long int>::iterator vector<unsigned long long int>
     typename vector<unsigned long long int>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
+  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(unsigned long long int));
-  vec_sz -= last - first;
+  vec_sz -= static_cast<size_type>(diff);
   return f;
 }
 
@@ -1299,8 +1310,9 @@ typename vector<float>::iterator vector<float>::erase(
     typename vector<float>::const_iterator first, typename vector<float>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
+  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(float));
-  vec_sz -= last - first;
+  vec_sz -= static_cast<size_type>(diff);
   return f;
 }
 
@@ -1309,8 +1321,9 @@ typename vector<double>::iterator vector<double>::erase(
     typename vector<double>::const_iterator first, typename vector<double>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
+  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(double));
-  vec_sz -= last - first;
+  vec_sz -= static_cast<size_type>(diff);
   return f;
 }
 
@@ -1320,8 +1333,9 @@ typename vector<long double>::iterator vector<long double>::erase(
     typename vector<long double>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
+  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(long double));
-  vec_sz -= last - first;
+  vec_sz -= static_cast<size_type>(diff);
   return f;
 }
 
@@ -1401,12 +1415,12 @@ void vector<long double>::clear() noexcept {
 }
 
 template <typename T>
-void Print(const vector<T> &v, std::string vec_name) {
-  for (auto i = 0; i < v.size(); i++) {
+void Print(const vector<T> &v, const std::string &vec_name) {
+  for (typename vector<T>::size_type i = 0; i < v.size(); i++) {
     std::cout << vec_name << "[" << i << "] = " << v[i] << std::endl;
   }
 }
 
 }  // namespace lni
 
-#endif
+#endif  // CATZ_VECTOR

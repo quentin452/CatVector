@@ -5,15 +5,13 @@
 
 #include "vector.hpp"
 
-
 class test {
  public:
   int a, b, c;
-  test() {}
-  test(int &_a, int &_b, int &_c) : a(_a), b(_b), c(_c) {}
-  test(int &&_a, int &&_b, int &&_c) : a(std::move(_a)), b(std::move(_b)), c(std::move(_c)) {}
-
-  void print() { printf(" %d %d %d\n", a, b, c); }
+  [[maybe_unused]] test() {}
+  [[maybe_unused]] test(int &_a, int &_b, int &_c) : a(_a), b(_b), c(_c) {}
+  [[maybe_unused]] test(int &&_a, int &&_b, int &&_c)
+      : a(std::move(_a)), b(std::move(_b)), c(std::move(_c)) {}
 };
 
 int main() {
@@ -37,7 +35,7 @@ int main() {
   vt.push_back(test(1, 2, 3));
   vt.emplace_back(2, 4, 6);
   vt.emplace(vt.begin() + 1, 1, 3, 5);
-  for (auto &vti : vt) vti.print();
+  for (auto &vti : vt) printf(" %d %d %d\n", vti.a, vti.b, vti.c);
   puts("\n");
 
   puts("Testing resize ... ");
@@ -65,8 +63,11 @@ int main() {
 
   puts("Testing [] operator overloading ... ");
   v1[0] = 1;
-  int sz = v1.size();
-  for (i = 0; i < sz; i++) printf(" %d", v1[i]);
+  auto sz = v1.size();
+  for (lni::vector<int>::size_type j = 0; j < static_cast<lni::vector<int>::size_type>(sz); ++j) {
+    printf(" %d", v1[j]);
+  }
+
   puts("\n");
 
   puts("Testing initializer list ... ");
@@ -166,7 +167,17 @@ int main() {
   puts("\n");
 
   puts("Testing reverse_iterator ... ");
-  for (auto it = v8.rbegin(); it != v8.rend(); ++it) printf(" %.3f", *it);
+  for (auto rit = v8.rbegin(); rit != v8.rend(); ++rit) printf(" %.3f", *rit);
+  puts("\n");
+
+  puts("Testing issue #4 #5 on github.com/lnishan/vector ... ");
+  lni::vector<int> v9(4, 5);
+  puts(" v9:");
+  for (auto &n : v9) printf(" %d", n);
+  puts("");
+  v9.assign(8, 7);
+  puts(" v9 (after assign(8, 7)):");
+  for (auto &n : v9) printf(" %d", n);
   puts("\n");
 
 #endif
