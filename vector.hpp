@@ -26,7 +26,7 @@ class vector {
   typedef std::reverse_iterator<iterator> reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
   typedef ptrdiff_t difference_type;
-  typedef int64_t size_type;
+  typedef size_t size_type;
 
   // 23.3.11.2, construct/copy/destroy:
   vector() noexcept;

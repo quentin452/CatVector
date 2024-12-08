@@ -20,9 +20,8 @@ int main() {
 
   st = clock();
   lni::vector<int64_t> v1;
-  for (i = 0; i < 10000000; ++i) v1.push_back(i);
+  for (i = 0; i < 10000000; ++i) v1.emplace_back(i);
   printf("lni::vector %.3fs\n", (double)(clock() - st) / CLOCKS_PER_SEC);
-
 #ifdef DEBUG
 
   puts("\n=== Debugging Messages ===\n");
@@ -32,7 +31,7 @@ int main() {
 
   puts("Testing emplace and emplace_back ... ");
   lni::vector<test> vt;
-  vt.push_back(test(1, 2, 3));
+  vt.emplace_back(test(1, 2, 3));
   vt.emplace_back(2, 4, 6);
   vt.emplace(vt.begin() + 1, 1, 3, 5);
   for (auto &vti : vt) printf(" %d %d %d\n", vti.a, vti.b, vti.c);
@@ -40,25 +39,25 @@ int main() {
 
   puts("Testing resize ... ");
   v1.resize(5);
-  for (auto &n : v1) printf(" %d", n);
+  for (auto &n : v1) printf(" %lld", n);
   puts("");
   v1.resize(10, 10);
-  for (auto &n : v1) printf(" %d", n);
+  for (auto &n : v1) printf(" %lld", n);
   puts("\n");
 
   puts("Testing assign ... ");
   lni::vector<int64_t> v1_a;
   v1_a.assign(v1.begin() + 1, v1.begin() + 3);
-  for (auto &n : v1_a) printf(" %d", n);
+  for (auto &n : v1_a) printf(" %lld", n);
   puts("\n");
 
   puts("Testing front and back ... ");
-  printf(" %d %d", v1.front(), v1.back());
+  printf(" %lld %lld", v1.front(), v1.back());
   puts("\n");
 
   puts("Testing pop_back ... ");
   v1.pop_back();
-  for (auto &n : v1) printf(" %d", n);
+  for (auto &n : v1) printf(" %lld", n);
   puts("\n");
 
   puts("Testing [] operator overloading ... ");
@@ -66,26 +65,26 @@ int main() {
   auto sz = v1.size();
   for (lni::vector<int64_t>::size_type j = 0; j < static_cast<lni::vector<int64_t>::size_type>(sz);
        ++j) {
-    printf(" %d", v1[j]);
+    printf(" %lld", v1[j]);
   }
 
   puts("\n");
 
   puts("Testing initializer list ... ");
   lni::vector<int64_t> v2 = {10, 11, 12, 13, 14};
-  for (auto &n : v2) printf(" %d", n);
+  for (auto &n : v2) printf(" %lld", n);
   puts("\n");
 
   puts("Testing swap ... ");
   v1.swap(v2);
-  for (auto &n : v1) printf(" %d", n);
+  for (auto &n : v1) printf(" %lld", n);
   puts("");
-  for (auto &n : v2) printf(" %d", n);
+  for (auto &n : v2) printf(" %lld", n);
   puts("\n");
 
   puts("Testing clear ... ");
   v1.clear();
-  for (auto &n : v1) printf(" %d", n);
+  for (auto &n : v1) printf(" %lld", n);
   puts("\n");
 
   puts("Testing constructors ... ");
@@ -142,9 +141,9 @@ int main() {
   puts("\n");
 
   puts("Testing shrink_to_fit ... ");
-  printf("Before: %u, %u\n", v7.size(), v7.capacity());
+  printf("Before: %zu, %zu\n", v7.size(), v7.capacity());
   v7.shrink_to_fit();
-  printf("After: %u, %u\n", v7.size(), v7.capacity());
+  printf("After: %zu, %zu\n", v7.size(), v7.capacity());
   puts("");
 
   puts("Testing operators ... ");
@@ -174,18 +173,18 @@ int main() {
   puts("Testing issue #4 #5 on github.com/lnishan/vector ... ");
   lni::vector<int64_t> v9(4, 5);
   puts(" v9:");
-  for (auto &n : v9) printf(" %d", n);
+  for (auto &n : v9) printf(" %lld", n);
   puts("");
   v9.assign(8, 7);
   puts(" v9 (after assign(8, 7)):");
-  for (auto &n : v9) printf(" %d", n);
+  for (auto &n : v9) printf(" %lld", n);
   puts("\n");
 
 #endif
 
   st = clock();
   std::vector<int> std_v1;
-  for (i = 0; i < 10000000; ++i) std_v1.push_back(i);
+  for (i = 0; i < 10000000; ++i) std_v1.emplace_back(i);
   printf("std::vector %.3fs\n", (double)(clock() - st) / CLOCKS_PER_SEC);
 
   return 0;
