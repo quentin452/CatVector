@@ -8,8 +8,7 @@
 
 #ifndef CATZ_VECTOR
 #define CATZ_VECTOR
-
-#define CATZ_VECTOR_MAX_SZ 1000000000
+#define CATZ_VECTOR_MAX_SZ std::numeric_limits<size_type>::max() / sizeof(T)
 
 namespace lni {
 
@@ -27,7 +26,7 @@ class vector {
   typedef std::reverse_iterator<iterator> reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
   typedef ptrdiff_t difference_type;
-  typedef unsigned int size_type;
+  typedef int64_t size_type;
 
   // 23.3.11.2, construct/copy/destroy:
   vector() noexcept;
@@ -234,7 +233,8 @@ inline void vector<T>::assign(typename vector<T>::size_type count, const T &valu
 }
 
 template <typename T>
-inline void vector<T>::assign(typename vector<T>::iterator first, typename vector<T>::iterator last) {
+inline void vector<T>::assign(
+    typename vector<T>::iterator first, typename vector<T>::iterator last) {
   ptrdiff_t count = last - first;
   if (count > static_cast<ptrdiff_t>(rsrv_sz)) {
     rsrv_sz = static_cast<size_type>(count) << 1;
@@ -327,7 +327,7 @@ typename vector<T>::size_type vector<T>::size() const noexcept {
 
 template <typename T>
 typename vector<T>::size_type vector<T>::max_size() const noexcept {
-  return CATZ_VECTOR_MAX_SZ;
+  return std::numeric_limits<size_type>::max() / sizeof(T);
 }
 
 template <typename T>
@@ -758,7 +758,8 @@ inline void vector<long long int>::resize(typename vector<long long int>::size_t
 }
 
 template <>
-inline void vector<unsigned long long int>::resize(typename vector<unsigned long long int>::size_type sz) {
+inline void vector<unsigned long long int>::resize(
+    typename vector<unsigned long long int>::size_type sz) {
   if (sz > rsrv_sz) {
     rsrv_sz = sz;
     reallocate();
@@ -807,7 +808,8 @@ inline void vector<bool>::resize(typename vector<bool>::size_type sz, const bool
 }
 
 template <>
-inline void vector<signed char>::resize(typename vector<signed char>::size_type sz, const signed char &c) {
+inline void vector<signed char>::resize(
+    typename vector<signed char>::size_type sz, const signed char &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
       rsrv_sz = sz;
@@ -847,7 +849,8 @@ inline void vector<char>::resize(typename vector<char>::size_type sz, const char
 }
 
 template <>
-inline void vector<short int>::resize(typename vector<short int>::size_type sz, const short int &c) {
+inline void vector<short int>::resize(
+    typename vector<short int>::size_type sz, const short int &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
       rsrv_sz = sz;
@@ -982,7 +985,8 @@ inline void vector<double>::resize(typename vector<double>::size_type sz, const 
 }
 
 template <>
-inline void vector<long double>::resize(typename vector<long double>::size_type sz, const long double &c) {
+inline void vector<long double>::resize(
+    typename vector<long double>::size_type sz, const long double &c) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
       rsrv_sz = sz;
@@ -1070,7 +1074,8 @@ inline void vector<long double>::pop_back() {
 }
 
 template <>
-inline typename vector<bool>::iterator vector<bool>::erase(typename vector<bool>::const_iterator it) {
+inline typename vector<bool>::iterator vector<bool>::erase(
+    typename vector<bool>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(bool));
   --vec_sz;
@@ -1096,7 +1101,8 @@ inline typename vector<unsigned char>::iterator vector<unsigned char>::erase(
 }
 
 template <>
-inline typename vector<char>::iterator vector<char>::erase(typename vector<char>::const_iterator it) {
+inline typename vector<char>::iterator vector<char>::erase(
+    typename vector<char>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(char));
   --vec_sz;
@@ -1175,7 +1181,8 @@ inline typename vector<unsigned long long int>::iterator vector<unsigned long lo
 }
 
 template <>
-inline typename vector<float>::iterator vector<float>::erase(typename vector<float>::const_iterator it) {
+inline typename vector<float>::iterator vector<float>::erase(
+    typename vector<float>::const_iterator it) {
   iterator iit = &arr[it - arr];
   memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(float));
   --vec_sz;

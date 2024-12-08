@@ -19,7 +19,7 @@ int main() {
   time_t st;
 
   st = clock();
-  lni::vector<int> v1;
+  lni::vector<int64_t> v1;
   for (i = 0; i < 10000000; ++i) v1.push_back(i);
   printf("lni::vector %.3fs\n", (double)(clock() - st) / CLOCKS_PER_SEC);
 
@@ -27,7 +27,7 @@ int main() {
 
   puts("\n=== Debugging Messages ===\n");
 
-  printf("max_size() = %u", v1.max_size());
+  std::cout << "max_size(): " << v1.max_size() << std::endl;
   puts("\n");
 
   puts("Testing emplace and emplace_back ... ");
@@ -47,7 +47,7 @@ int main() {
   puts("\n");
 
   puts("Testing assign ... ");
-  lni::vector<int> v1_a;
+  lni::vector<int64_t> v1_a;
   v1_a.assign(v1.begin() + 1, v1.begin() + 3);
   for (auto &n : v1_a) printf(" %d", n);
   puts("\n");
@@ -64,14 +64,15 @@ int main() {
   puts("Testing [] operator overloading ... ");
   v1[0] = 1;
   auto sz = v1.size();
-  for (lni::vector<int>::size_type j = 0; j < static_cast<lni::vector<int>::size_type>(sz); ++j) {
+  for (lni::vector<int64_t>::size_type j = 0; j < static_cast<lni::vector<int64_t>::size_type>(sz);
+       ++j) {
     printf(" %d", v1[j]);
   }
 
   puts("\n");
 
   puts("Testing initializer list ... ");
-  lni::vector<int> v2 = {10, 11, 12, 13, 14};
+  lni::vector<int64_t> v2 = {10, 11, 12, 13, 14};
   for (auto &n : v2) printf(" %d", n);
   puts("\n");
 
@@ -171,7 +172,7 @@ int main() {
   puts("\n");
 
   puts("Testing issue #4 #5 on github.com/lnishan/vector ... ");
-  lni::vector<int> v9(4, 5);
+  lni::vector<int64_t> v9(4, 5);
   puts(" v9:");
   for (auto &n : v9) printf(" %d", n);
   puts("");
