@@ -47,8 +47,10 @@ class vector {
 
   // iterators:
   iterator begin() noexcept;
+  const_iterator begin() const noexcept;
   const_iterator cbegin() const noexcept;
   iterator end() noexcept;
+  const_iterator end() const noexcept;
   const_iterator cend() const noexcept;
   reverse_iterator rbegin() noexcept;
   const_reverse_iterator crbegin() const noexcept;
@@ -261,12 +263,22 @@ typename vector<T>::iterator vector<T>::begin() noexcept {
 }
 
 template <typename T>
+typename vector<T>::const_iterator vector<T>::begin() const noexcept {
+  return arr;
+}
+
+template <typename T>
 typename vector<T>::const_iterator vector<T>::cbegin() const noexcept {
   return arr;
 }
 
 template <typename T>
 typename vector<T>::iterator vector<T>::end() noexcept {
+  return arr + vec_sz;
+}
+
+template <typename T>
+typename vector<T>::const_iterator vector<T>::end() const noexcept {
   return arr + vec_sz;
 }
 
