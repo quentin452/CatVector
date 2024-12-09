@@ -1,5 +1,6 @@
-#include <cstdio>
 #include <ctime>
+#include <iomanip>
+#include <iostream>
 #include <utility>
 #include <vector>
 
@@ -21,171 +22,192 @@ int main() {
   st = clock();
   lni::vector<int64_t> v1;
   for (i = 0; i < 10000000; ++i) v1.emplace_back(i);
-  printf("lni::vector %.3fs\n", (double)(clock() - st) / CLOCKS_PER_SEC);
-#ifdef DEBUG
+  std::cout << "lni::vector " << std::fixed << (double)(clock() - st) / CLOCKS_PER_SEC << "s\n";
 
-  puts("\n=== Debugging Messages ===\n");
+#ifndef DEBUG
 
-  std::cout << "max_size(): " << v1.max_size() << std::endl;
-  puts("\n");
+  std::cout << "\n=== Debugging Messages ===\n\n";
 
-  puts("Testing emplace and emplace_back ... ");
+  std::cout << "max_size(): " << v1.max_size() << "\n\n";
+
+  std::cout << "Testing emplace and emplace_back ...\n";
   lni::vector<test> vt;
   vt.emplace_back(test(1, 2, 3));
   vt.emplace_back(2, 4, 6);
   vt.emplace(vt.begin() + 1, 1, 3, 5);
-  for (auto &vti : vt) printf(" %d %d %d\n", vti.a, vti.b, vti.c);
-  puts("\n");
+  for (const auto &vti : vt) std::cout << " " << vti.a << " " << vti.b << " " << vti.c << "\n";
+  std::cout << "\n";
 
-  puts("Testing resize ... ");
+  std::cout << "Testing resize ...\n";
   v1.resize(5);
-  for (auto &n : v1) printf(" %lld", n);
-  puts("");
+  for (const auto &n : v1) std::cout << " " << n;
+  std::cout << "\n";
   v1.resize(10, 10);
-  for (auto &n : v1) printf(" %lld", n);
-  puts("\n");
+  for (const auto &n : v1) std::cout << " " << n;
+  std::cout << "\n\n";
 
-  puts("Testing assign ... ");
+  std::cout << "Testing assign ...\n";
   lni::vector<int64_t> v1_a;
   v1_a.assign(v1.begin() + 1, v1.begin() + 3);
-  for (auto &n : v1_a) printf(" %lld", n);
-  puts("\n");
+  for (const auto &n : v1_a) std::cout << " " << n;
+  std::cout << "\n\n";
 
-  puts("Testing front and back ... ");
-  printf(" %lld %lld", v1.front(), v1.back());
-  puts("\n");
+  std::cout << "Testing front and back ...\n";
+  std::cout << " " << v1.front() << " " << v1.back() << "\n\n";
 
-  puts("Testing pop_back ... ");
+  std::cout << "Testing pop_back ...\n";
   v1.pop_back();
-  for (auto &n : v1) printf(" %lld", n);
-  puts("\n");
+  for (const auto &n : v1) std::cout << " " << n;
+  std::cout << "\n\n";
 
-  puts("Testing [] operator overloading ... ");
+  std::cout << "Testing [] operator overloading ...\n";
   v1[0] = 1;
   auto sz = v1.size();
   for (lni::vector<int64_t>::size_type j = 0; j < static_cast<lni::vector<int64_t>::size_type>(sz);
        ++j) {
-    printf(" %lld", v1[j]);
+    std::cout << " " << v1[j];
   }
+  std::cout << "\n\n";
 
-  puts("\n");
-
-  puts("Testing initializer list ... ");
+  std::cout << "Testing initializer list ...\n";
   lni::vector<int64_t> v2 = {10, 11, 12, 13, 14};
-  for (auto &n : v2) printf(" %lld", n);
-  puts("\n");
+  for (const auto &n : v2) std::cout << " " << n;
+  std::cout << "\n\n";
 
-  puts("Testing swap ... ");
+  std::cout << "Testing swap ...\n";
   v1.swap(v2);
-  for (auto &n : v1) printf(" %lld", n);
-  puts("");
-  for (auto &n : v2) printf(" %lld", n);
-  puts("\n");
+  for (const auto &n : v1) std::cout << " " << n;
+  std::cout << "\n";
+  for (const auto &n : v2) std::cout << " " << n;
+  std::cout << "\n\n";
 
-  puts("Testing clear ... ");
+  std::cout << "Testing clear ...\n";
   v1.clear();
-  for (auto &n : v1) printf(" %lld", n);
-  puts("\n");
+  for (const auto &n : v1) std::cout << " " << n;
+  std::cout << "\n\n";
 
-  puts("Testing constructors ... ");
+  std::cout << "Testing constructors ...\n";
   lni::vector<double> v3(5, 2.0);
   v3[0] = 1.0;
   v3[4] = 3.0;
-  for (auto &f : v3) printf(" %.3f ", f);
-  puts("");
+  for (const auto &f : v3) std::cout << " " << f;
+  std::cout << "\n";
   lni::vector<double> v4(v3);
-  for (auto &f : v4) printf(" %.3f ", f);
-  puts("\n");
+  for (const auto &f : v4) std::cout << " " << f;
+  std::cout << "\n\n";
 
-  puts("Testing assignment operators ... ");
+  std::cout << "Testing assignment operators ...\n";
   lni::vector<double> v5 = v3;
-  for (auto &f : v5) printf(" %.3f", f);
-  puts("");
+  for (const auto &f : v5) std::cout << " " << f;
+  std::cout << "\n";
   lni::vector<double> v6 = {3.0, 2.0, 2.0, 2.0, 1.0};
-  for (auto &f : v6) printf(" %.3f", f);
-  puts("\n");
+  for (const auto &f : v6) std::cout << " " << f;
+  std::cout << "\n\n";
 
-  puts("Testing insert ... ");
+  std::cout << "Testing insert ... " << std::endl;
+  std::cout << "1Size of v6: " << v6.size() << ", Capacity: " << v6.capacity() << std::endl;
   auto it = v6.insert(v6.begin() + 1, 2.5);
-  printf(" Just inserted: %.3f\n", *it);
+  std::cout << " Just inserted: " << std::fixed << std::setprecision(3) << *it << std::endl;
+  std::cout << "2Size of v6: " << v6.size() << ", Capacity: " << v6.capacity() << std::endl;
   it = v6.insert(v6.begin(), 4.0);
-  printf(" Just inserted: %.3f\n", *it);
+  std::cout << " Just inserted: " << std::fixed << std::setprecision(3) << *it << std::endl;
+  std::cout << "3Size of v6: " << v6.size() << ", Capacity: " << v6.capacity() << std::endl;
   lni::vector<double> vins{-2.0, -3.0};
   it = v6.insert(v6.begin() + 1, vins.begin(), vins.end());
-  printf(" Just inserted: %.3f %.3f\n", *it, *(it + 1));
-  for (auto &f : v6) printf(" %.3f", f);
-  puts("\n");
+  std::cout << " Just inserted: " << *it << " " << *(it + 1) << std::endl;
+  std::cout << "4Size of v6: " << v6.size() << ", Capacity: " << v6.capacity() << std::endl;
+  for (auto &f : v6) std::cout << " " << std::fixed << std::setprecision(3) << f;
+  std::cout << std::endl;
 
   it = v6.insert(v6.end(), 2, 0.0);
   it = v6.insert(v6.end() - 2, 3, 0.5);
   it = v6.insert(v6.begin(), {1.0, 2.0, 3.0, 4.0, 5.0});
-  printf(" v6:");
-  for (auto &f : v6) printf(" %.3f", f);
-  puts("");
+  std::cout << " v6:";
+  for (auto &f : v6) std::cout << " " << std::fixed << std::setprecision(3) << f;
+  std::cout << std::endl;
 
+  std::cout << "Création de v7 avec 2 éléments initialisés à 5.0\n";
   lni::vector<double> v7(2, 5.0);
-  v7.insert(v7.end(), v6.begin(), v6.end());
-  for (auto &f : v7) printf(" %.3f", f);
-  puts("");
 
+  std::cout << "Contenu initial de v7 : ";
+  for (auto &f : v7) std::cout << " " << std::fixed << std::setprecision(3) << f;
+  std::cout << "\n";
+
+  std::cout << "Insertion des éléments de v6 dans v7\n";
+  std::cout << "Taille actuelle de v7 : " << v7.size() << ", Capacité : " << v7.capacity() << "\n";
+
+  std::cout << "Taille de v6 : " << v6.size() << "\n";
+  std::cout << "Contenu de v6 : ";
+  for (auto &f : v6) std::cout << " " << std::fixed << std::setprecision(3) << f;
+  std::cout << "\n";
+
+  v7.insert(v7.end(), v6.begin(), v6.end());
+
+  std::cout << "Taille après insertion dans v7 : " << v7.size() << ", Capacité : " << v7.capacity()
+            << "\n";
+  std::cout << "Contenu de v7 après insertion : ";
+  for (auto &f : v7) std::cout << " " << std::fixed << std::setprecision(3) << f;
+  std::cout << "\n";
+  
   v7.insert(v7.begin(), {8.0, 7.0, 6.0});
   v7.insert(v7.end(), {-1.0, -2.0, -2.5});
-  for (auto &f : v7) printf(" %.3f", f);
-  puts("\n");
+  for (auto &f : v7) std::cout << " " << std::fixed << std::setprecision(3) << f;
+  std::cout << std::endl;
 
-  puts("Testing erase ... ");
+  std::cout << "Testing erase ... " << std::endl;
   v7.erase(v7.begin());
   v7.erase(v7.begin() + 2, v7.begin() + 4);
-  printf(" v7:");
-  for (auto &f : v7) printf(" %.3f", f);
-  puts("\n");
+  std::cout << " v7:";
+  for (auto &f : v7) std::cout << " " << std::fixed << std::setprecision(3) << f;
+  std::cout << std::endl;
 
-  puts("Testing shrink_to_fit ... ");
-  printf("Before: %zu, %zu\n", v7.size(), v7.capacity());
+  std::cout << "Testing shrink_to_fit ... " << std::endl;
+  std::cout << "Before: " << v7.size() << ", " << v7.capacity() << std::endl;
   v7.shrink_to_fit();
-  printf("After: %zu, %zu\n", v7.size(), v7.capacity());
-  puts("");
+  std::cout << "After: " << v7.size() << ", " << v7.capacity() << std::endl;
+  std::cout << std::endl;
 
-  puts("Testing operators ... ");
+  std::cout << "Testing operators ... " << std::endl;
   lni::vector<double> v8(v7);
-  printf(" v6 == v8: %d\n", v6 == v8);
-  printf(" v6 != v8: %d\n", v6 != v8);
-  printf(" v7 == v8: %d\n", v7 == v8);
-  printf(" v7 != v8: %d\n", v7 != v8);
+  std::cout << " v6 == v8: " << (v6 == v8) << std::endl;
+  std::cout << " v6 != v8: " << (v6 != v8) << std::endl;
+  std::cout << " v7 == v8: " << (v7 == v8) << std::endl;
+  std::cout << " v7 != v8: " << (v7 != v8) << std::endl;
 
-  printf("\n v6 < v8: %d\n", v6 < v8);
-  printf(" v6 <= v8: %d\n", v6 <= v8);
-  printf(" v8 < v6: %d\n", v8 < v6);
-  printf(" v7 <= v8: %d\n", v7 <= v8);
-  printf(" v8 < v7: %d\n", v8 < v7);
+  std::cout << "\n v6 < v8: " << (v6 < v8) << std::endl;
+  std::cout << " v6 <= v8: " << (v6 <= v8) << std::endl;
+  std::cout << " v8 < v6: " << (v8 < v6) << std::endl;
+  std::cout << " v7 <= v8: " << (v7 <= v8) << std::endl;
+  std::cout << " v8 < v7: " << (v8 < v7) << std::endl;
 
-  printf("\n v6 >= v8: %d\n", v6 >= v8);
-  printf(" v6 > v8: %d\n", v6 > v8);
-  printf(" v8 >= v6: %d\n", v8 >= v6);
-  printf(" v7 > v8: %d\n", v7 > v8);
-  printf(" v8 >= v7: %d\n", v8 >= v7);
-  puts("\n");
+  std::cout << "\n v6 >= v8: " << (v6 >= v8) << std::endl;
+  std::cout << " v6 > v8: " << (v6 > v8) << std::endl;
+  std::cout << " v8 >= v6: " << (v8 >= v6) << std::endl;
+  std::cout << " v7 > v8: " << (v7 > v8) << std::endl;
+  std::cout << " v8 >= v7: " << (v8 >= v7) << std::endl;
+  std::cout << std::endl;
 
-  puts("Testing reverse_iterator ... ");
-  for (auto rit = v8.rbegin(); rit != v8.rend(); ++rit) printf(" %.3f", *rit);
-  puts("\n");
+  std::cout << "Testing reverse_iterator ... " << std::endl;
+  for (auto rit = v8.rbegin(); rit != v8.rend(); ++rit)
+    std::cout << " " << std::fixed << std::setprecision(3) << *rit;
+  std::cout << std::endl;
 
-  puts("Testing issue #4 #5 on github.com/lnishan/vector ... ");
+  std::cout << "Testing issue #4 #5 on github.com/lnishan/vector ... " << std::endl;
   lni::vector<int64_t> v9(4, 5);
-  puts(" v9:");
-  for (auto &n : v9) printf(" %lld", n);
-  puts("");
+  std::cout << " v9:";
+  for (auto &n : v9) std::cout << " " << n;
+  std::cout << std::endl;
   v9.assign(8, 7);
-  puts(" v9 (after assign(8, 7)):");
-  for (auto &n : v9) printf(" %lld", n);
-  puts("\n");
-
+  std::cout << " v9 (after assign(8, 7)):";
+  lni::Print(v9, "v9");
+  for (auto &n : v9) std::cout << " " << n;
+  std::cout << std::endl;
 #endif
 
   st = clock();
   std::vector<int> std_v1;
   for (i = 0; i < 10000000; ++i) std_v1.emplace_back(i);
-  printf("std::vector %.3fs\n", (double)(clock() - st) / CLOCKS_PER_SEC);
+  std::cout << "std::vector " << std::fixed << (double)(clock() - st) / CLOCKS_PER_SEC << "s\n";
 
   return 0;
 }
