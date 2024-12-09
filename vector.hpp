@@ -619,9 +619,14 @@ inline bool vector<T>::operator>=(const vector<T> &rhs) const {
 
 template <typename T>
 inline void vector<T>::resize(typename vector<T>::size_type sz) {
-  if (sz > rsrv_sz) {
-    rsrv_sz = sz;
-    reallocate();
+  if (sz > vec_sz) {
+    if (sz > rsrv_sz) {
+      rsrv_sz = sz;
+      reallocate();
+    }
+  } else {
+    size_type i;
+    for (i = vec_sz; i < sz; ++i) arr[i].~T();
   }
   vec_sz = sz;
 }
@@ -635,10 +640,12 @@ inline void vector<T>::resize(typename vector<T>::size_type sz, const T &c) {
     }
     size_type i;
     for (i = vec_sz; i < sz; ++i) arr[i] = c;
+  } else {
+    size_type i;
+    for (i = vec_sz; i < sz; ++i) arr[i].~T();
   }
   vec_sz = sz;
 }
-
 template <>
 inline void vector<bool>::pop_back() {
   --vec_sz;
