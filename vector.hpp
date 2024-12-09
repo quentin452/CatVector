@@ -145,20 +145,19 @@ vector<T>::vector(typename vector<T>::size_type n, const T &value) {
 template <typename T>
 vector<T>::vector(typename vector<T>::iterator first, typename vector<T>::iterator last) {
   std::cout << "Inside ... \n";
-  size_type count = static_cast<size_type>(last - first);
+  size_type i, count = last - first;
   std::cout << "count =" << count << std::endl;
-  rsrv_sz = count << 1;
+  rsrv_sz = count << 2;
   vec_sz = count;
   arr = new T[rsrv_sz];
-  for (size_type i = 0; i < count; ++i, ++first) arr[i] = *first;
-  vec_sz = count;
+  for (i = 0; i < count; ++i, ++first) arr[i] = *first;
 }
 
 template <typename T>
 vector<T>::vector(std::initializer_list<T> lst) {
-  rsrv_sz = static_cast<size_type>(lst.size()) << 1;
+  rsrv_sz = lst.size() << 2;
   arr = new T[rsrv_sz];
-  for (const auto &item : lst) arr[vec_sz++] = item;
+  for (auto &item : lst) arr[vec_sz++] = item;
 }
 
 template <typename T>
@@ -213,9 +212,8 @@ vector<T> &vector<T>::operator=(vector<T> &&other) {
 
 template <typename T>
 vector<T> &vector<T>::operator=(std::initializer_list<T> lst) {
-  size_type new_size = static_cast<size_type>(lst.size());
-  if (rsrv_sz < new_size) {
-    rsrv_sz = new_size << 1;
+  if (rsrv_sz < lst.size()) {
+    rsrv_sz = lst.size() << 2;
     reallocate();
   }
   vec_sz = 0;
@@ -237,15 +235,13 @@ inline void vector<T>::assign(typename vector<T>::size_type count, const T &valu
 template <typename T>
 inline void vector<T>::assign(
     typename vector<T>::iterator first, typename vector<T>::iterator last) {
-  ptrdiff_t count = last - first;
-  if (count > static_cast<ptrdiff_t>(rsrv_sz)) {
-    rsrv_sz = static_cast<size_type>(count) << 1;
+  size_type i, count = last - first;
+  if (count > rsrv_sz) {
+    rsrv_sz = count << 2;
     reallocate();
   }
-  for (size_type i = 0; i < static_cast<size_type>(count); ++i, ++first) {
-    arr[i] = *first;
-  }
-  vec_sz = static_cast<size_type>(count);
+  for (i = 0; i < count; ++i, ++first) arr[i] = *first;
+  vec_sz = count;
 }
 
 template <typename T>
@@ -476,7 +472,7 @@ inline void vector<T>::pop_back() {
 
 template <typename T>
 template <class... Args>
-typename vector<T>::iterator vector<T>::emplace(
+inline typename vector<T>::iterator vector<T>::emplace(
     typename vector<T>::const_iterator it, Args &&...args) {
   iterator iit = &arr[it - arr];
   if (vec_sz == rsrv_sz) {
@@ -490,7 +486,7 @@ typename vector<T>::iterator vector<T>::emplace(
 }
 
 template <typename T>
-typename vector<T>::iterator vector<T>::insert(
+inline typename vector<T>::iterator vector<T>::insert(
     typename vector<T>::const_iterator it, const T &val) {
   iterator iit = &arr[it - arr];
   if (vec_sz == rsrv_sz) {
@@ -504,7 +500,8 @@ typename vector<T>::iterator vector<T>::insert(
 }
 
 template <typename T>
-typename vector<T>::iterator vector<T>::insert(typename vector<T>::const_iterator it, T &&val) {
+inline typename vector<T>::iterator vector<T>::insert(
+    typename vector<T>::const_iterator it, T &&val) {
   iterator iit = &arr[it - arr];
   if (vec_sz == rsrv_sz) {
     rsrv_sz <<= 2;
@@ -517,45 +514,45 @@ typename vector<T>::iterator vector<T>::insert(typename vector<T>::const_iterato
 }
 
 template <typename T>
-typename vector<T>::iterator vector<T>::insert(
+inline typename vector<T>::iterator vector<T>::insert(
     typename vector<T>::const_iterator it, typename vector<T>::size_type cnt, const T &val) {
   iterator f = &arr[it - arr];
   if (!cnt) return f;
   if (vec_sz + cnt > rsrv_sz) {
-    rsrv_sz = static_cast<size_type>(vec_sz + cnt) << 1;
+    rsrv_sz = (vec_sz + cnt) << 2;
     reallocate();
   }
   memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
   vec_sz += cnt;
-  for (iterator iter = f; cnt--; ++iter) (*iter) = val;
+  for (iterator it = f; cnt--; ++it) (*it) = val;
   return f;
 }
 
 template <typename T>
 template <class InputIt>
-typename vector<T>::iterator vector<T>::insert(
+inline typename vector<T>::iterator vector<T>::insert(
     typename vector<T>::const_iterator it, InputIt first, InputIt last) {
   iterator f = &arr[it - arr];
-  size_type cnt = static_cast<size_type>(last - first);
+  size_type cnt = last - first;
   if (!cnt) return f;
   if (vec_sz + cnt > rsrv_sz) {
-    rsrv_sz = static_cast<size_type>(vec_sz + cnt) << 1;
+    rsrv_sz = (vec_sz + cnt) << 2;
     reallocate();
   }
   memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
-  for (iterator iter = f; first != last; ++iter, ++first) (*iter) = *first;
+  for (iterator it = f; first != last; ++it, ++first) (*it) = *first;
   vec_sz += cnt;
   return f;
 }
 
 template <typename T>
-typename vector<T>::iterator vector<T>::insert(
+inline typename vector<T>::iterator vector<T>::insert(
     typename vector<T>::const_iterator it, std::initializer_list<T> lst) {
-  size_type cnt = static_cast<size_type>(lst.size());
+  size_type cnt = lst.size();
   iterator f = &arr[it - arr];
   if (!cnt) return f;
   if (vec_sz + cnt > rsrv_sz) {
-    rsrv_sz = static_cast<size_type>(vec_sz + cnt) << 1;
+    rsrv_sz = (vec_sz + cnt) << 2;
     reallocate();
   }
   memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
@@ -590,12 +587,11 @@ inline typename vector<T>::iterator vector<T>::erase(
 
 template <typename T>
 inline void vector<T>::swap(vector<T> &rhs) {
-  size_type tvec_sz = static_cast<size_type>(vec_sz);
-  size_type trsrv_sz = static_cast<size_type>(rsrv_sz);
+  size_t tvec_sz = vec_sz, trsrv_sz = rsrv_sz;
   T *tarr = arr;
 
-  vec_sz = static_cast<size_type>(rhs.vec_sz);
-  rsrv_sz = static_cast<size_type>(rhs.rsrv_sz);
+  vec_sz = rhs.vec_sz;
+  rsrv_sz = rhs.rsrv_sz;
   arr = rhs.arr;
 
   rhs.vec_sz = tvec_sz;
@@ -1057,9 +1053,8 @@ inline typename vector<bool>::iterator vector<bool>::erase(
     typename vector<bool>::const_iterator first, typename vector<bool>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
-  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(bool));
-  vec_sz -= static_cast<size_type>(diff);
+  vec_sz -= last - first;
   return f;
 }
 
@@ -1069,9 +1064,8 @@ inline typename vector<signed char>::iterator vector<signed char>::erase(
     typename vector<signed char>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
-  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(signed char));
-  vec_sz -= static_cast<size_type>(diff);
+  vec_sz -= last - first;
   return f;
 }
 
@@ -1081,9 +1075,8 @@ inline typename vector<unsigned char>::iterator vector<unsigned char>::erase(
     typename vector<unsigned char>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
-  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(unsigned char));
-  vec_sz -= static_cast<size_type>(diff);
+  vec_sz -= last - first;
   return f;
 }
 
@@ -1092,9 +1085,8 @@ inline typename vector<char>::iterator vector<char>::erase(
     typename vector<char>::const_iterator first, typename vector<char>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
-  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(char));
-  vec_sz -= static_cast<size_type>(diff);
+  vec_sz -= last - first;
   return f;
 }
 
@@ -1104,9 +1096,8 @@ inline typename vector<short int>::iterator vector<short int>::erase(
     typename vector<short int>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
-  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(short int));
-  vec_sz -= static_cast<size_type>(diff);
+  vec_sz -= last - first;
   return f;
 }
 
@@ -1116,9 +1107,8 @@ inline typename vector<unsigned short int>::iterator vector<unsigned short int>:
     typename vector<unsigned short int>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
-  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(unsigned short int));
-  vec_sz -= static_cast<size_type>(diff);
+  vec_sz -= last - first;
   return f;
 }
 
@@ -1127,9 +1117,8 @@ inline typename vector<int>::iterator vector<int>::erase(
     typename vector<int>::const_iterator first, typename vector<int>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
-  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(int));
-  vec_sz -= static_cast<size_type>(diff);
+  vec_sz -= last - first;
   return f;
 }
 
@@ -1139,9 +1128,8 @@ inline typename vector<unsigned int>::iterator vector<unsigned int>::erase(
     typename vector<unsigned int>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
-  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(unsigned int));
-  vec_sz -= static_cast<size_type>(diff);
+  vec_sz -= last - first;
   return f;
 }
 
@@ -1151,9 +1139,8 @@ inline typename vector<long long int>::iterator vector<long long int>::erase(
     typename vector<long long int>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
-  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(long long int));
-  vec_sz -= static_cast<size_type>(diff);
+  vec_sz -= last - first;
   return f;
 }
 
@@ -1163,9 +1150,8 @@ inline typename vector<unsigned long long int>::iterator vector<unsigned long lo
     typename vector<unsigned long long int>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
-  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(unsigned long long int));
-  vec_sz -= static_cast<size_type>(diff);
+  vec_sz -= last - first;
   return f;
 }
 
@@ -1174,9 +1160,8 @@ inline typename vector<float>::iterator vector<float>::erase(
     typename vector<float>::const_iterator first, typename vector<float>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
-  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(float));
-  vec_sz -= static_cast<size_type>(diff);
+  vec_sz -= last - first;
   return f;
 }
 
@@ -1185,9 +1170,8 @@ inline typename vector<double>::iterator vector<double>::erase(
     typename vector<double>::const_iterator first, typename vector<double>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
-  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(double));
-  vec_sz -= static_cast<size_type>(diff);
+  vec_sz -= last - first;
   return f;
 }
 
@@ -1197,12 +1181,10 @@ inline typename vector<long double>::iterator vector<long double>::erase(
     typename vector<long double>::const_iterator last) {
   iterator f = &arr[first - arr];
   if (first == last) return f;
-  ptrdiff_t diff = last - first;
   memmove(f, last, (vec_sz - (last - arr)) * sizeof(long double));
-  vec_sz -= static_cast<size_type>(diff);
+  vec_sz -= last - first;
   return f;
 }
-
 template <>
 inline void vector<bool>::clear() noexcept {
   vec_sz = 0;
