@@ -62,9 +62,7 @@ class vector {
   size_type max_size() const noexcept;
   size_type capacity() const noexcept;
   void resize(size_type);
-  void resizeBase(size_type);
   void resize(size_type, const T &);
-  void resizeBase(size_type sz, const T &c);
   void reserve(size_type);
   void shrink_to_fit();
 
@@ -116,52 +114,52 @@ class vector {
   size_type vec_sz = 0;
   T *arr;
 
+  void resizeBase(size_type);
+  void resizeBase(size_type sz, const T &c);
   inline void reallocate();
 };
 
 template <typename T>
-vector<T>::vector() noexcept {
+inline vector<T>::vector() noexcept {
   arr = new T[rsrv_sz];
 }
 
 template <typename T>
-vector<T>::vector(typename vector<T>::size_type n) {
+inline vector<T>::vector(typename vector<T>::size_type n) {
   size_type i;
-  rsrv_sz = n << 1;
+  rsrv_sz = n << 2;
   arr = new T[rsrv_sz];
   for (i = 0; i < n; ++i) arr[i] = T();
   vec_sz = n;
 }
 
 template <typename T>
-vector<T>::vector(typename vector<T>::size_type n, const T &value) {
+inline vector<T>::vector(typename vector<T>::size_type n, const T &value) {
   size_type i;
-  rsrv_sz = n << 1;
+  rsrv_sz = n << 2;
   arr = new T[rsrv_sz];
   for (i = 0; i < n; ++i) arr[i] = value;
   vec_sz = n;
 }
 
 template <typename T>
-vector<T>::vector(typename vector<T>::iterator first, typename vector<T>::iterator last) {
-  std::cout << "Inside ... \n";
+inline vector<T>::vector(typename vector<T>::iterator first, typename vector<T>::iterator last) {
   size_type i, count = last - first;
-  std::cout << "count =" << count << std::endl;
   rsrv_sz = count << 2;
-  vec_sz = count;
   arr = new T[rsrv_sz];
   for (i = 0; i < count; ++i, ++first) arr[i] = *first;
+  vec_sz = count;
 }
 
 template <typename T>
-vector<T>::vector(std::initializer_list<T> lst) {
+inline vector<T>::vector(std::initializer_list<T> lst) {
   rsrv_sz = lst.size() << 2;
   arr = new T[rsrv_sz];
   for (auto &item : lst) arr[vec_sz++] = item;
 }
 
 template <typename T>
-vector<T>::vector(const vector<T> &other) {
+inline vector<T>::vector(const vector<T> &other) {
   size_type i;
   rsrv_sz = other.rsrv_sz;
   arr = new T[rsrv_sz];
@@ -170,7 +168,7 @@ vector<T>::vector(const vector<T> &other) {
 }
 
 template <typename T>
-vector<T>::vector(vector<T> &&other) noexcept {
+inline vector<T>::vector(vector<T> &&other) noexcept {
   size_type i;
   rsrv_sz = other.rsrv_sz;
   arr = new T[rsrv_sz];
@@ -179,45 +177,47 @@ vector<T>::vector(vector<T> &&other) noexcept {
 }
 
 template <typename T>
-vector<T>::~vector() {
-  delete[] arr;
+inline vector<T>::~vector() {
+  if (arr) {
+    delete[] arr;
+  }
 }
 
 template <typename T>
-vector<T> &vector<T>::operator=(const vector<T> &other) {
-  if (this == &other) {
-    return *this;
-  }
+inline vector<T> &vector<T>::operator=(const vector<T> &other) {
   size_type i;
   if (rsrv_sz < other.vec_sz) {
-    rsrv_sz = other.vec_sz << 1;
+    rsrv_sz = other.vec_sz << 2;
     reallocate();
   }
   for (i = 0; i < other.vec_sz; ++i) arr[i] = other.arr[i];
   vec_sz = other.vec_sz;
+
   return *this;
 }
 
 template <typename T>
-vector<T> &vector<T>::operator=(vector<T> &&other) {
+inline vector<T> &vector<T>::operator=(vector<T> &&other) {
   size_type i;
   if (rsrv_sz < other.vec_sz) {
-    rsrv_sz = other.vec_sz << 1;
+    rsrv_sz = other.vec_sz << 2;
     reallocate();
   }
   for (i = 0; i < other.vec_sz; ++i) arr[i] = std::move(other.arr[i]);
   vec_sz = other.vec_sz;
+
   return *this;
 }
 
 template <typename T>
-vector<T> &vector<T>::operator=(std::initializer_list<T> lst) {
+inline vector<T> &vector<T>::operator=(std::initializer_list<T> lst) {
   if (rsrv_sz < lst.size()) {
     rsrv_sz = lst.size() << 2;
     reallocate();
   }
   vec_sz = 0;
   for (auto &item : lst) arr[vec_sz++] = item;
+
   return *this;
 }
 
@@ -225,7 +225,7 @@ template <typename T>
 inline void vector<T>::assign(typename vector<T>::size_type count, const T &value) {
   size_type i;
   if (count > rsrv_sz) {
-    rsrv_sz = count << 1;
+    rsrv_sz = count << 2;
     reallocate();
   }
   for (i = 0; i < count; ++i) arr[i] = value;
@@ -248,7 +248,7 @@ template <typename T>
 inline void vector<T>::assign(std::initializer_list<T> lst) {
   size_type i, count = lst.size();
   if (count > rsrv_sz) {
-    rsrv_sz = count << 1;
+    rsrv_sz = count << 2;
     reallocate();
   }
   i = 0;
@@ -256,80 +256,80 @@ inline void vector<T>::assign(std::initializer_list<T> lst) {
 }
 
 template <typename T>
-typename vector<T>::iterator vector<T>::begin() noexcept {
+inline typename vector<T>::iterator vector<T>::begin() noexcept {
   return arr;
 }
 
 template <typename T>
-typename vector<T>::const_iterator vector<T>::begin() const noexcept {
+inline typename vector<T>::const_iterator vector<T>::begin() const noexcept {
   return arr;
 }
 
 template <typename T>
-typename vector<T>::const_iterator vector<T>::cbegin() const noexcept {
+inline typename vector<T>::const_iterator vector<T>::cbegin() const noexcept {
   return arr;
 }
 
 template <typename T>
-typename vector<T>::iterator vector<T>::end() noexcept {
+inline typename vector<T>::iterator vector<T>::end() noexcept {
   return arr + vec_sz;
 }
 
 template <typename T>
-typename vector<T>::const_iterator vector<T>::end() const noexcept {
+inline typename vector<T>::const_iterator vector<T>::end() const noexcept {
   return arr + vec_sz;
 }
 
 template <typename T>
-typename vector<T>::const_iterator vector<T>::cend() const noexcept {
+inline typename vector<T>::const_iterator vector<T>::cend() const noexcept {
   return arr + vec_sz;
 }
 
 template <typename T>
-typename vector<T>::reverse_iterator vector<T>::rbegin() noexcept {
+inline typename vector<T>::reverse_iterator vector<T>::rbegin() noexcept {
   return reverse_iterator(arr + vec_sz);
 }
 
 template <typename T>
-typename vector<T>::const_reverse_iterator vector<T>::crbegin() const noexcept {
+inline typename vector<T>::const_reverse_iterator vector<T>::crbegin() const noexcept {
   return reverse_iterator(arr + vec_sz);
 }
 
 template <typename T>
-typename vector<T>::reverse_iterator vector<T>::rend() noexcept {
+inline typename vector<T>::reverse_iterator vector<T>::rend() noexcept {
   return reverse_iterator(arr);
 }
 
 template <typename T>
-typename vector<T>::const_reverse_iterator vector<T>::crend() const noexcept {
+inline typename vector<T>::const_reverse_iterator vector<T>::crend() const noexcept {
   return reverse_iterator(arr);
 }
 
 template <typename T>
 inline void vector<T>::reallocate() {
-  T *tarr = new T[rsrv_sz];
+  T *tarr = new (std::nothrow) T[rsrv_sz];
   memcpy(tarr, arr, vec_sz * sizeof(T));
   delete[] arr;
   arr = tarr;
 }
 
 template <typename T>
-bool vector<T>::empty() const noexcept {
+inline bool vector<T>::empty() const noexcept {
   return vec_sz == 0;
 }
 
 template <typename T>
-typename vector<T>::size_type vector<T>::size() const noexcept {
+inline typename vector<T>::size_type vector<T>::size() const noexcept {
   return vec_sz;
 }
 
 template <typename T>
-typename vector<T>::size_type vector<T>::max_size() const noexcept {
+inline typename vector<T>::size_type vector<T>::max_size() const noexcept {
   return CATZ_VECTOR_MAX_SZ;
 }
 
 template <typename T>
-typename vector<T>::size_type vector<T>::capacity() const noexcept {
+inline typename vector<T>::size_type vector<T>::capacity() const noexcept {
   return rsrv_sz;
 }
 
@@ -373,22 +373,25 @@ inline void vector<T>::reserve(typename vector<T>::size_type _sz) {
 
 template <typename T>
 inline void vector<T>::shrink_to_fit() {
-  rsrv_sz = vec_sz;
-  reallocate();
+  if (rsrv_sz != vec_sz) {
+    rsrv_sz = vec_sz;
+    reallocate();
+  }
 }
 
 template <typename T>
-typename vector<T>::reference vector<T>::operator[](typename vector<T>::size_type idx) {
+inline typename vector<T>::reference vector<T>::operator[](typename vector<T>::size_type idx) {
   return arr[idx];
 }
 
 template <typename T>
-typename vector<T>::const_reference vector<T>::operator[](typename vector<T>::size_type idx) const {
+inline typename vector<T>::const_reference vector<T>::operator[](
+    typename vector<T>::size_type idx) const {
   return arr[idx];
 }
 
 template <typename T>
-typename vector<T>::reference vector<T>::at(size_type pos) {
+inline typename vector<T>::reference vector<T>::at(size_type pos) {
   if (pos < vec_sz)
     return arr[pos];
   else
@@ -396,7 +399,7 @@ typename vector<T>::reference vector<T>::at(size_type pos) {
 }
 
 template <typename T>
-typename vector<T>::const_reference vector<T>::at(size_type pos) const {
+inline typename vector<T>::const_reference vector<T>::at(size_type pos) const {
   if (pos < vec_sz)
     return arr[pos];
   else
@@ -404,32 +407,32 @@ typename vector<T>::const_reference vector<T>::at(size_type pos) const {
 }
 
 template <typename T>
-typename vector<T>::reference vector<T>::front() {
+inline typename vector<T>::reference vector<T>::front() {
   return arr[0];
 }
 
 template <typename T>
-typename vector<T>::const_reference vector<T>::front() const {
+inline typename vector<T>::const_reference vector<T>::front() const {
   return arr[0];
 }
 
 template <typename T>
-typename vector<T>::reference vector<T>::back() {
+inline typename vector<T>::reference vector<T>::back() {
   return arr[vec_sz - 1];
 }
 
 template <typename T>
-typename vector<T>::const_reference vector<T>::back() const {
+inline typename vector<T>::const_reference vector<T>::back() const {
   return arr[vec_sz - 1];
 }
 
 template <typename T>
-T *vector<T>::data() noexcept {
+inline T *vector<T>::data() noexcept {
   return arr;
 }
 
 template <typename T>
-const T *vector<T>::data() const noexcept {
+inline const T *vector<T>::data() const noexcept {
   return arr;
 }
 
@@ -607,7 +610,7 @@ inline void vector<T>::clear() noexcept {
 }
 
 template <typename T>
-bool vector<T>::operator==(const vector<T> &rhs) const {
+inline bool vector<T>::operator==(const vector<T> &rhs) const {
   if (vec_sz != rhs.vec_sz) return false;
   size_type i;
   for (i = 0; i < vec_sz; ++i)
@@ -616,7 +619,7 @@ bool vector<T>::operator==(const vector<T> &rhs) const {
 }
 
 template <typename T>
-bool vector<T>::operator!=(const vector<T> &rhs) const {
+inline bool vector<T>::operator!=(const vector<T> &rhs) const {
   if (vec_sz != rhs.vec_sz) return true;
   size_type i;
   for (i = 0; i < vec_sz; ++i)
@@ -625,7 +628,7 @@ bool vector<T>::operator!=(const vector<T> &rhs) const {
 }
 
 template <typename T>
-bool vector<T>::operator<(const vector<T> &rhs) const {
+inline bool vector<T>::operator<(const vector<T> &rhs) const {
   size_type i, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
   for (i = 0; i < ub; ++i)
     if (arr[i] != rhs.arr[i]) return arr[i] < rhs.arr[i];
@@ -633,7 +636,7 @@ bool vector<T>::operator<(const vector<T> &rhs) const {
 }
 
 template <typename T>
-bool vector<T>::operator<=(const vector<T> &rhs) const {
+inline bool vector<T>::operator<=(const vector<T> &rhs) const {
   size_type i, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
   for (i = 0; i < ub; ++i)
     if (arr[i] != rhs.arr[i]) return arr[i] < rhs.arr[i];
@@ -641,7 +644,7 @@ bool vector<T>::operator<=(const vector<T> &rhs) const {
 }
 
 template <typename T>
-bool vector<T>::operator>(const vector<T> &rhs) const {
+inline bool vector<T>::operator>(const vector<T> &rhs) const {
   size_type i, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
   for (i = 0; i < ub; ++i)
     if (arr[i] != rhs.arr[i]) return arr[i] > rhs.arr[i];
@@ -649,7 +652,7 @@ bool vector<T>::operator>(const vector<T> &rhs) const {
 }
 
 template <typename T>
-bool vector<T>::operator>=(const vector<T> &rhs) const {
+inline bool vector<T>::operator>=(const vector<T> &rhs) const {
   size_type i, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
   for (i = 0; i < ub; ++i)
     if (arr[i] != rhs.arr[i]) return arr[i] > rhs.arr[i];
@@ -664,7 +667,6 @@ inline void vector<T>::resizeBase(size_type sz) {
   }
   vec_sz = sz;
 }
-
 template <>
 inline void vector<bool>::resize(typename vector<bool>::size_type sz) {
   resizeBase(sz);
@@ -748,13 +750,11 @@ inline void vector<T>::resizeBase(size_type sz, const T &c) {
       rsrv_sz = sz;
       reallocate();
     }
-    for (size_type i = vec_sz; i < sz; ++i) {
-      arr[i] = c;
-    }
+    size_type i;
+    for (i = vec_sz; i < sz; ++i) arr[i] = c;
   }
   vec_sz = sz;
 }
-
 template <>
 inline void vector<bool>::resize(typename vector<bool>::size_type sz, const bool &c) {
   resizeBase(sz, c);
@@ -1185,6 +1185,7 @@ inline typename vector<long double>::iterator vector<long double>::erase(
   vec_sz -= last - first;
   return f;
 }
+
 template <>
 inline void vector<bool>::clear() noexcept {
   vec_sz = 0;
