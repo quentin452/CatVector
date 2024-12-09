@@ -124,54 +124,54 @@ inline vector<T>::vector() noexcept {
 
 template <typename T>
 inline vector<T>::vector(typename vector<T>::size_type n) {
-  size_type i;
   rsrv_sz = n << 2;
-  arr = new T[rsrv_sz];
-  for (i = 0; i < n; ++i) arr[i] = T();
+  arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
+  std::uninitialized_default_construct_n(arr, n);
   vec_sz = n;
 }
 
 template <typename T>
 inline vector<T>::vector(typename vector<T>::size_type n, const T &value) {
-  size_type i;
   rsrv_sz = n << 2;
-  arr = new T[rsrv_sz];
-  for (i = 0; i < n; ++i) arr[i] = value;
+  arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
+  std::uninitialized_fill_n(arr, n, value);
   vec_sz = n;
 }
 
 template <typename T>
 inline vector<T>::vector(typename vector<T>::iterator first, typename vector<T>::iterator last) {
-  size_type i, count = last - first;
+  size_type count = last - first;
   rsrv_sz = count << 2;
-  arr = new T[rsrv_sz];
-  for (i = 0; i < count; ++i, ++first) arr[i] = *first;
+  arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
+  std::uninitialized_copy(first, last, arr);
   vec_sz = count;
 }
 
 template <typename T>
 inline vector<T>::vector(std::initializer_list<T> lst) {
   rsrv_sz = lst.size() << 2;
-  arr = new T[rsrv_sz];
-  for (auto &item : lst) arr[vec_sz++] = item;
+  arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
+  std::uninitialized_copy(lst.begin(), lst.end(), arr);
+  vec_sz = lst.size();
 }
 
 template <typename T>
 inline vector<T>::vector(const vector<T> &other) {
-  size_type i;
   rsrv_sz = other.rsrv_sz;
-  arr = new T[rsrv_sz];
-  for (i = 0; i < other.vec_sz; ++i) arr[i] = other.arr[i];
+  arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
+  std::uninitialized_copy(other.arr, other.arr + other.vec_sz, arr);
   vec_sz = other.vec_sz;
 }
 
 template <typename T>
 inline vector<T>::vector(vector<T> &&other) noexcept {
-  size_type i;
   rsrv_sz = other.rsrv_sz;
-  arr = new T[rsrv_sz];
-  for (i = 0; i < other.vec_sz; ++i) arr[i] = std::move(other.arr[i]);
   vec_sz = other.vec_sz;
+  arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
+  std::uninitialized_move(other.arr, other.arr + vec_sz, arr);
+  other.vec_sz = 0;
+  other.arr = nullptr;
+  other.rsrv_sz = 0;
 }
 
 template <typename T>
