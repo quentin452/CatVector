@@ -235,7 +235,7 @@ inline void vector<T>::assign(typename vector<T>::size_type count, const T &valu
 template <typename T>
 inline void vector<T>::assign(
     typename vector<T>::iterator first, typename vector<T>::iterator last) {
-  size_type i, count = last - first;
+  size_type i, count = static_cast<size_type>(last - first);
   if (count > rsrv_sz) {
     rsrv_sz = count << 2;
     reallocate();
@@ -515,7 +515,6 @@ inline typename vector<T>::iterator vector<T>::insert(
   ++vec_sz;
   return iit;
 }
-
 template <typename T>
 inline typename vector<T>::iterator vector<T>::insert(
     typename vector<T>::const_iterator it, typename vector<T>::size_type cnt, const T &val) {
@@ -527,7 +526,7 @@ inline typename vector<T>::iterator vector<T>::insert(
   }
   memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
   vec_sz += cnt;
-  for (iterator it = f; cnt--; ++it) (*it) = val;
+  for (iterator cur = f; cnt--; ++cur) (*cur) = val;
   return f;
 }
 
@@ -536,14 +535,14 @@ template <class InputIt>
 inline typename vector<T>::iterator vector<T>::insert(
     typename vector<T>::const_iterator it, InputIt first, InputIt last) {
   iterator f = &arr[it - arr];
-  size_type cnt = last - first;
+  size_type cnt = static_cast<size_type>(last - first);
   if (!cnt) return f;
   if (vec_sz + cnt > rsrv_sz) {
     rsrv_sz = (vec_sz + cnt) << 2;
     reallocate();
   }
   memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
-  for (iterator it = f; first != last; ++it, ++first) (*it) = *first;
+  for (iterator cur = f; first != last; ++cur, ++first) (*cur) = *first;
   vec_sz += cnt;
   return f;
 }
