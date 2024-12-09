@@ -178,7 +178,7 @@ int main() {
   for (const auto &f : v7) {
     std::cout << " " << std::fixed << std::setprecision(3) << f;
   }
-
+  std::cout << std::endl;
   std::cout << "Testing shrink_to_fit ... " << std::endl;
   std::cout << "Before: " << v7.size() << ", " << v7.capacity() << std::endl;
   v7.shrink_to_fit();
