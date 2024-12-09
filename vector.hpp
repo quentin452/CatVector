@@ -429,7 +429,9 @@ inline void vector<T>::push_back(T &&val) {
 template <typename T>
 inline void vector<T>::pop_back() {
   --vec_sz;
-  arr[vec_sz].~T();
+  if constexpr (!std::is_trivially_destructible<T>::value) {
+    arr[vec_sz].~T();
+  }
 }
 
 template <typename T>
@@ -568,8 +570,11 @@ inline void vector<T>::swap(vector<T> &rhs) {
 
 template <typename T>
 inline void vector<T>::clear() noexcept {
-  size_type i;
-  for (i = 0; i < vec_sz; ++i) arr[i].~T();
+  if constexpr (!std::is_trivially_destructible<T>::value) {
+    for (size_type i = 0; i < vec_sz; ++i) {
+      arr[i].~T();
+    }
+  }
   vec_sz = 0;
 }
 
@@ -651,155 +656,6 @@ inline void vector<T>::resize(typename vector<T>::size_type sz, const T &c) {
     for (i = vec_sz; i < sz; ++i) arr[i].~T();
   }
   vec_sz = sz;
-}
-template <>
-inline void vector<bool>::pop_back() {
-  --vec_sz;
-}
-
-template <>
-inline void vector<signed char>::pop_back() {
-  --vec_sz;
-}
-
-template <>
-inline void vector<unsigned char>::pop_back() {
-  --vec_sz;
-}
-
-template <>
-inline void vector<char>::pop_back() {
-  --vec_sz;
-}
-
-template <>
-inline void vector<short int>::pop_back() {
-  --vec_sz;
-}
-
-template <>
-inline void vector<unsigned short int>::pop_back() {
-  --vec_sz;
-}
-
-template <>
-inline void vector<int>::pop_back() {
-  --vec_sz;
-}
-
-template <>
-inline void vector<unsigned int>::pop_back() {
-  --vec_sz;
-}
-
-template <>
-inline void vector<long int>::pop_back() {
-  --vec_sz;
-}
-
-template <>
-inline void vector<unsigned long int>::pop_back() {
-  --vec_sz;
-}
-
-template <>
-inline void vector<long long int>::pop_back() {
-  --vec_sz;
-}
-
-template <>
-inline void vector<unsigned long long int>::pop_back() {
-  --vec_sz;
-}
-
-template <>
-inline void vector<float>::pop_back() {
-  --vec_sz;
-}
-
-template <>
-inline void vector<double>::pop_back() {
-  --vec_sz;
-}
-
-template <>
-inline void vector<long double>::pop_back() {
-  --vec_sz;
-}
-
-template <>
-inline void vector<bool>::clear() noexcept {
-  vec_sz = 0;
-}
-
-template <>
-inline void vector<signed char>::clear() noexcept {
-  vec_sz = 0;
-}
-
-template <>
-inline void vector<unsigned char>::clear() noexcept {
-  vec_sz = 0;
-}
-
-template <>
-inline void vector<char>::clear() noexcept {
-  vec_sz = 0;
-}
-
-template <>
-inline void vector<short int>::clear() noexcept {
-  vec_sz = 0;
-}
-
-template <>
-inline void vector<unsigned short int>::clear() noexcept {
-  vec_sz = 0;
-}
-
-template <>
-inline void vector<int>::clear() noexcept {
-  vec_sz = 0;
-}
-
-template <>
-inline void vector<unsigned int>::clear() noexcept {
-  vec_sz = 0;
-}
-
-template <>
-inline void vector<long int>::clear() noexcept {
-  vec_sz = 0;
-}
-
-template <>
-inline void vector<unsigned long int>::clear() noexcept {
-  vec_sz = 0;
-}
-
-template <>
-inline void vector<long long int>::clear() noexcept {
-  vec_sz = 0;
-}
-
-template <>
-inline void vector<unsigned long long int>::clear() noexcept {
-  vec_sz = 0;
-}
-
-template <>
-inline void vector<float>::clear() noexcept {
-  vec_sz = 0;
-}
-
-template <>
-inline void vector<double>::clear() noexcept {
-  vec_sz = 0;
-}
-
-template <>
-inline void vector<long double>::clear() noexcept {
-  vec_sz = 0;
 }
 
 template <typename T>
