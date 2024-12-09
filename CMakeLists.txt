@@ -18,10 +18,6 @@ endif()
 # Add executables
 add_executable(tester vector.cpp tester.cpp)
 
-# Define DEBUG target
-add_executable(dbg vector.cpp tester.cpp)
-target_compile_definitions(dbg PRIVATE DEBUG)
-
 # Custom clean target
 add_custom_target(clean_all
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_BINARY_DIR}/cmake_clean.cmake
@@ -30,11 +26,11 @@ add_custom_target(clean_all
 
 # Generate custom clean script
 file(WRITE ${CMAKE_BINARY_DIR}/cmake_clean.cmake
-"file(REMOVE \${CMAKE_BINARY_DIR}/tester \${CMAKE_BINARY_DIR}/dbg)"
+"file(REMOVE \${CMAKE_BINARY_DIR}/tester)"
 )
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR})
 
 # Install rules if needed
-install(TARGETS tester dbg DESTINATION bin)
+install(TARGETS tester DESTINATION bin)
