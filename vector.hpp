@@ -102,10 +102,10 @@ class vector {
 
   bool operator==(const vector<T> &) const;
   bool operator!=(const vector<T> &) const;
-  bool operator<(const vector<T> &) const;
-  bool operator<=(const vector<T> &) const;
-  bool operator>(const vector<T> &) const;
-  bool operator>=(const vector<T> &) const;
+  bool operator<(const vector<T> &rhs) const { return compare(rhs, std::less<T>()); }
+  bool operator<=(const vector<T> &rhs) const { return compare(rhs, std::less_equal<T>()); }
+  bool operator>(const vector<T> &rhs) const { return compare(rhs, std::greater<T>()); }
+  bool operator>=(const vector<T> &rhs) const { return compare(rhs, std::greater_equal<T>()); }
 
   friend void Print(const vector<T> &v, const std::string &vec_name);
 
@@ -114,6 +114,22 @@ class vector {
   size_type vec_sz = 0;
   T *arr;
 
+  inline void ensure_capacity(size_type required_sz) {
+    if (required_sz > rsrv_sz) {
+      rsrv_sz = required_sz << 2;
+      reallocate();
+    }
+  }
+  template <typename Compare>
+  inline bool compare(const vector<T> &rhs, Compare comp) const {
+    size_type ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
+    for (size_type i = 0; i < ub; ++i) {
+      if (arr[i] != rhs.arr[i]) {
+        return comp(arr[i], rhs.arr[i]);
+      }
+    }
+    return comp(static_cast<T>(vec_sz), static_cast<T>(rhs.vec_sz));
+  }
   inline void reallocate();
 };
 
@@ -180,74 +196,59 @@ inline vector<T>::~vector() {
     delete[] arr;
   }
 }
-
 template <typename T>
 inline vector<T> &vector<T>::operator=(const vector<T> &other) {
-  size_type i;
-  if (rsrv_sz < other.vec_sz) {
-    rsrv_sz = other.vec_sz << 2;
-    reallocate();
+  if (this != &other) {
+    ensure_capacity(other.vec_sz);
+    std::copy(other.arr, other.arr + other.vec_sz, arr);
+    vec_sz = other.vec_sz;
   }
-  for (i = 0; i < other.vec_sz; ++i) arr[i] = other.arr[i];
-  vec_sz = other.vec_sz;
   return *this;
 }
 
 template <typename T>
 inline vector<T> &vector<T>::operator=(vector<T> &&other) {
-  size_type i;
-  if (rsrv_sz < other.vec_sz) {
-    rsrv_sz = other.vec_sz << 2;
-    reallocate();
+  if (this != &other) {
+    ensure_capacity(other.vec_sz);
+    std::move(other.arr, other.arr + other.vec_sz, arr);
+    vec_sz = other.vec_sz;
+    other.vec_sz = 0;
+    other.arr = nullptr;
+    other.rsrv_sz = 0;
   }
-  for (i = 0; i < other.vec_sz; ++i) arr[i] = std::move(other.arr[i]);
-  vec_sz = other.vec_sz;
   return *this;
 }
 
 template <typename T>
 inline vector<T> &vector<T>::operator=(std::initializer_list<T> lst) {
-  if (rsrv_sz < lst.size()) {
-    rsrv_sz = lst.size() << 2;
-    reallocate();
-  }
-  vec_sz = 0;
-  for (auto &item : lst) arr[vec_sz++] = item;
+  ensure_capacity(lst.size());
+  std::copy(lst.begin(), lst.end(), arr);
+  vec_sz = static_cast<size_type>(lst.size());
   return *this;
 }
 
 template <typename T>
 inline void vector<T>::assign(typename vector<T>::size_type count, const T &value) {
-  size_type i;
-  if (count > rsrv_sz) {
-    rsrv_sz = count << 2;
-    reallocate();
-  }
-  for (i = 0; i < count; ++i) arr[i] = value;
+  ensure_capacity(count);
+  std::fill(arr, arr + count, value);
   vec_sz = count;
 }
 
 template <typename T>
 inline void vector<T>::assign(
     typename vector<T>::iterator first, typename vector<T>::iterator last) {
-  size_type i, count = static_cast<size_type>(last - first);
-  if (count > rsrv_sz) {
-    rsrv_sz = count << 2;
-    reallocate();
-  }
-  for (i = 0; i < count; ++i, ++first) arr[i] = *first;
+  size_type count = static_cast<size_type>(last - first);
+  ensure_capacity(count);
+  std::copy(first, last, arr);
   vec_sz = count;
 }
 
 template <typename T>
 inline void vector<T>::assign(std::initializer_list<T> lst) {
-  size_type i, count = lst.size();
-  if (count > rsrv_sz) {
-    rsrv_sz = count << 2;
-    reallocate();
-  }
-  i = 0;
-  for (auto &item : lst) arr[++i] = item;
+  size_type count = static_cast<size_type>(lst.size());
+  ensure_capacity(count);
+  std::copy(lst.begin(), lst.end(), arr);
+  vec_sz = count;
 }
 
 template <typename T>
@@ -597,38 +598,6 @@ inline bool vector<T>::operator!=(const vector<T> &rhs) const {
 }
 
 template <typename T>
-inline bool vector<T>::operator<(const vector<T> &rhs) const {
-  size_type i, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
-  for (i = 0; i < ub; ++i)
-    if (arr[i] != rhs.arr[i]) return arr[i] < rhs.arr[i];
-  return vec_sz < rhs.vec_sz;
-}
-
-template <typename T>
-inline bool vector<T>::operator<=(const vector<T> &rhs) const {
-  size_type i, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
-  for (i = 0; i < ub; ++i)
-    if (arr[i] != rhs.arr[i]) return arr[i] < rhs.arr[i];
-  return vec_sz <= rhs.vec_sz;
-}
-
-template <typename T>
-inline bool vector<T>::operator>(const vector<T> &rhs) const {
-  size_type i, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
-  for (i = 0; i < ub; ++i)
-    if (arr[i] != rhs.arr[i]) return arr[i] > rhs.arr[i];
-  return vec_sz > rhs.vec_sz;
-}
-
-template <typename T>
-inline bool vector<T>::operator>=(const vector<T> &rhs) const {
-  size_type i, ub = vec_sz < rhs.vec_sz ? vec_sz : rhs.vec_sz;
-  for (i = 0; i < ub; ++i)
-    if (arr[i] != rhs.arr[i]) return arr[i] > rhs.arr[i];
-  return vec_sz >= rhs.vec_sz;
-}
-
-template <typename T>
 inline void vector<T>::resize(typename vector<T>::size_type sz) {
   if (sz > vec_sz) {
     if (sz > rsrv_sz) {
@@ -660,8 +629,9 @@ inline void vector<T>::resize(typename vector<T>::size_type sz, const T &c) {
 
 template <typename T>
 inline void Print(const vector<T> &v, const std::string &vec_name) {
-  for (typename vector<T>::size_type i = 0; i < v.size(); ++i) {
-    std::cout << vec_name << "[" << i << "] = " << v[i] << std::endl;
+  typename vector<T>::size_type i = 0;
+  for (const auto &item : v) {
+    std::cout << vec_name << "[" << i++ << "] = " << item << std::endl;
   }
 }
 
