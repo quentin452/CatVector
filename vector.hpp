@@ -45,24 +45,17 @@ class vector {
 
   inline vector(typename vector<T>::iterator first, typename vector<T>::iterator last) {
     size_type count = last - first;
-    rsrv_sz = count << 2;
-    arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
-    std::uninitialized_copy(first, last, arr);
-    vec_sz = count;
+    allocate_and_copy(count, first);
   }
 
   inline vector(std::initializer_list<T> lst) {
-    rsrv_sz = lst.size() << 2;
-    arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
-    std::uninitialized_copy(lst.begin(), lst.end(), arr);
-    vec_sz = lst.size();
+    size_type count = lst.size();
+    allocate_and_copy(count, lst.begin());
   }
 
   inline vector(const vector<T> &other) {
-    rsrv_sz = other.rsrv_sz;
-    arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
-    std::uninitialized_copy(other.arr, other.arr + other.vec_sz, arr);
-    vec_sz = other.vec_sz;
+    size_type count = other.vec_sz;
+    allocate_and_copy(count, other.arr);
   }
 
   inline vector(vector<T> &&other) noexcept {
@@ -329,26 +322,14 @@ class vector {
 
   inline typename vector<T>::iterator erase(typename vector<T>::const_iterator it) {
     iterator iit = &arr[it - arr];
-    if constexpr (!std::is_trivially_destructible<T>::value) {
-      (*iit).~T();
-    }
-    memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(T));
-    --vec_sz;
+    erase_impl(it, it + 1);
     return iit;
   }
 
   inline typename vector<T>::iterator erase(
       typename vector<T>::const_iterator first, typename vector<T>::const_iterator last) {
-    iterator f = &arr[first - arr];
-    if (first == last) return f;
-    if constexpr (!std::is_trivially_destructible<T>::value) {
-      for (; first != last; ++first) {
-        (*first).~T();
-      }
-    }
-    memmove(f, last, (vec_sz - (last - arr)) * sizeof(T));
-    vec_sz -= last - first;
-    return f;
+    erase_impl(first, last);
+    return &arr[first - arr];
   }
 
   inline void swap(vector<T> &rhs) {
@@ -366,53 +347,20 @@ class vector {
     vec_sz = 0;
   }
 
-  inline bool operator==(const vector<T> &rhs) const {
-    if (vec_sz != rhs.vec_sz) return false;
-    size_type i;
-    for (i = 0; i < vec_sz; ++i)
-      if (arr[i] != rhs.arr[i]) return false;
-    return true;
-  }
-
+  inline bool operator==(const vector<T> &rhs) const { return compare(rhs, std::equal_to<T>()); }
   inline bool operator!=(const vector<T> &rhs) const {
-    if (vec_sz != rhs.vec_sz) return true;
-    size_type i;
-    for (i = 0; i < vec_sz; ++i)
-      if (arr[i] != rhs.arr[i]) return true;
-    return false;
+    return compare(rhs, std::not_equal_to<T>());
   }
-  bool operator<(const vector<T> &rhs) const { return compare(rhs, std::less<T>()); }
-  bool operator<=(const vector<T> &rhs) const { return compare(rhs, std::less_equal<T>()); }
-  bool operator>(const vector<T> &rhs) const { return compare(rhs, std::greater<T>()); }
-  bool operator>=(const vector<T> &rhs) const { return compare(rhs, std::greater_equal<T>()); }
-
-  inline void resize(typename vector<T>::size_type sz) {
-    if (sz > vec_sz) {
-      if (sz > rsrv_sz) {
-        rsrv_sz = sz;
-        reallocate();
-      }
-    } else {
-      size_type i;
-      for (i = vec_sz; i < sz; ++i) arr[i].~T();
-    }
-    vec_sz = sz;
+  inline bool operator<(const vector<T> &rhs) const { return compare(rhs, std::less<T>()); }
+  inline bool operator<=(const vector<T> &rhs) const { return compare(rhs, std::less_equal<T>()); }
+  inline bool operator>(const vector<T> &rhs) const { return compare(rhs, std::greater<T>()); }
+  inline bool operator>=(const vector<T> &rhs) const {
+    return compare(rhs, std::greater_equal<T>());
   }
 
-  inline void resize(typename vector<T>::size_type sz, const T &c) {
-    if (sz > vec_sz) {
-      if (sz > rsrv_sz) {
-        rsrv_sz = sz;
-        reallocate();
-      }
-      size_type i;
-      for (i = vec_sz; i < sz; ++i) arr[i] = c;
-    } else {
-      size_type i;
-      for (i = vec_sz; i < sz; ++i) arr[i].~T();
-    }
-    vec_sz = sz;
-  }
+  inline void resize(typename vector<T>::size_type sz) { resize_impl(sz); }
+
+  inline void resize(typename vector<T>::size_type sz, const T &c) { resize_impl(sz, &c); }
 
   friend void Print(const vector<T> &v, const std::string &vec_name);
 
@@ -439,9 +387,44 @@ class vector {
     delete[] arr;
     arr = tarr;
   }
-
-  vector<T>::size_type rsrv_sz = 4;
-  vector<T>::size_type vec_sz = 0;
+  void allocate_and_copy(size_type count, const T *first) {
+    rsrv_sz = count << 2;
+    arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
+    std::uninitialized_copy(first, first + count, arr);
+    vec_sz = count;
+  }
+  inline void resize_impl(typename vector<T>::size_type sz, const T *c = nullptr) {
+    if (sz > vec_sz) {
+      if (sz > rsrv_sz) {
+        rsrv_sz = sz;
+        reallocate();
+      }
+      size_type i;
+      for (i = vec_sz; i < sz; ++i) {
+        if (c) {
+          arr[i] = *c;
+        } else {
+          new (&arr[i]) T();
+        }
+      }
+    } else {
+      size_type i;
+      for (i = vec_sz; i < sz; ++i) arr[i].~T();
+    }
+    vec_sz = sz;
+  }
+  inline void erase_impl(
+      typename vector<T>::const_iterator first, typename vector<T>::const_iterator last) {
+    iterator f = &arr[first - arr];
+    if constexpr (!std::is_trivially_destructible<T>::value) {
+      for (; first != last; ++first) {
+        (*first).~T();
+      }
+    }
+    memmove(f, last, (vec_sz - (last - arr)) * sizeof(T));
+    vec_sz -= last - first;
+  }
+  vector<T>::size_type rsrv_sz = 4, vec_sz = 0;
   T *arr;
 };
 template <typename T>
