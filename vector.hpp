@@ -248,75 +248,46 @@ class vector {
   }
 
   inline typename vector<T>::iterator insert(typename vector<T>::const_iterator it, const T &val) {
-    iterator iit = &arr[it - arr];
-    if (vec_sz == rsrv_sz) {
-      rsrv_sz <<= 2;
-      reallocate();
-    }
-    memmove(iit + 1, iit, (vec_sz - (it - arr)) * sizeof(T));
-    (*iit) = val;
-    ++vec_sz;
-    return iit;
+    iterator f = insert_impl(it, 1);  
+    (*f) = val;
+    return f;
   }
 
   inline typename vector<T>::iterator insert(typename vector<T>::const_iterator it, T &&val) {
-    iterator iit = &arr[it - arr];
-    if (vec_sz == rsrv_sz) {
-      rsrv_sz <<= 2;
-      reallocate();
-    }
-    memmove(iit + 1, iit, (vec_sz - (it - arr)) * sizeof(T));
-    (*iit) = std::move(val);
-    ++vec_sz;
-    return iit;
+    iterator f = insert_impl(it, 1);  
+    (*f) = std::move(val);
+    return f;
   }
 
   inline typename vector<T>::iterator insert(
-      typename vector<T>::const_iterator it, typename vector<T>::size_type cnt, const T &val) {
-    iterator f = &arr[it - arr];
-    if (!cnt) return f;
-    if (vec_sz + cnt > rsrv_sz) {
-      rsrv_sz = (vec_sz + cnt) << 2;
-      reallocate();
+      typename vector<T>::const_iterator it, size_type cnt, const T &val) {
+    iterator f = insert_impl(it, cnt);  
+    for (iterator cur = f; cnt--; ++cur) {
+      (*cur) = val;
     }
-    memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
-    vec_sz += cnt;
-    for (iterator cur = f; cnt--; ++cur) (*cur) = val;
     return f;
   }
 
   template <class InputIt>
   inline typename vector<T>::iterator insert(
       typename vector<T>::const_iterator it, InputIt first, InputIt last) {
-    iterator f = &arr[it - arr];
     size_type cnt = static_cast<size_type>(last - first);
-    if (!cnt) return f;
-    if (vec_sz + cnt > rsrv_sz) {
-      rsrv_sz = (vec_sz + cnt) << 2;
-      reallocate();
+    iterator f = insert_impl(it, cnt);  
+    for (iterator cur = f; first != last; ++cur, ++first) {
+      (*cur) = *first;
     }
-    memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
-    for (iterator cur = f; first != last; ++cur, ++first) (*cur) = *first;
-    vec_sz += cnt;
     return f;
   }
 
   inline typename vector<T>::iterator insert(
       typename vector<T>::const_iterator it, std::initializer_list<T> lst) {
     size_type cnt = lst.size();
-    iterator f = &arr[it - arr];
-    if (!cnt) return f;
-    if (vec_sz + cnt > rsrv_sz) {
-      rsrv_sz = (vec_sz + cnt) << 2;
-      reallocate();
-    }
-    memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
+    iterator f = insert_impl(it, cnt);  
     iterator iit = f;
     for (auto &item : lst) {
       (*iit) = item;
       ++iit;
     }
-    vec_sz += cnt;
     return f;
   }
 
@@ -424,6 +395,18 @@ class vector {
     memmove(f, last, (vec_sz - (last - arr)) * sizeof(T));
     vec_sz -= last - first;
   }
+  inline typename vector<T>::iterator insert_impl(
+      typename vector<T>::const_iterator it, size_type cnt) {
+    iterator f = &arr[it - arr];
+    if (vec_sz + cnt > rsrv_sz) {
+      rsrv_sz = (vec_sz + cnt) << 2;
+      reallocate();
+    }
+    memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
+    vec_sz += cnt;
+    return f;
+  }
+
   vector<T>::size_type rsrv_sz = 4, vec_sz = 0;
   T *arr;
 };
