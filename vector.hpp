@@ -27,94 +27,397 @@ class vector {
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
   typedef ptrdiff_t difference_type;
   typedef size_t size_type;
+  vector() noexcept { arr = new T[rsrv_sz]; }
 
-  // 23.3.11.2, construct/copy/destroy:
-  vector() noexcept;
-  explicit vector(size_type n);
-  vector(size_type n, const T &val);
-  vector(typename vector<T>::iterator first, typename vector<T>::iterator last);
-  vector(std::initializer_list<T>);
-  vector(const vector<T> &);
-  vector(vector<T> &&) noexcept;
-  ~vector();
-  vector<T> &operator=(const vector<T> &);
-  vector<T> &operator=(vector<T> &&);
-  vector<T> &operator=(std::initializer_list<T>);
-  void assign(size_type, const T &value);
-  void assign(typename vector<T>::iterator, typename vector<T>::iterator);
-  void assign(std::initializer_list<T>);
+  inline vector(typename vector<T>::size_type n) {
+    rsrv_sz = n << 2;
+    arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
+    std::uninitialized_default_construct_n(arr, n);
+    vec_sz = n;
+  }
 
-  // iterators:
-  iterator begin() noexcept;
-  const_iterator begin() const noexcept;
-  const_iterator cbegin() const noexcept;
-  iterator end() noexcept;
-  const_iterator end() const noexcept;
-  const_iterator cend() const noexcept;
-  reverse_iterator rbegin() noexcept;
-  const_reverse_iterator crbegin() const noexcept;
-  reverse_iterator rend() noexcept;
-  const_reverse_iterator crend() const noexcept;
+  inline vector(typename vector<T>::size_type n, const T &value) {
+    rsrv_sz = n << 2;
+    arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
+    std::uninitialized_fill_n(arr, n, value);
+    vec_sz = n;
+  }
 
-  // 23.3.11.3, capacity:
-  bool empty() const noexcept;
-  size_type size() const noexcept;
-  size_type max_size() const noexcept;
-  size_type capacity() const noexcept;
-  void resize(size_type);
-  void resize(size_type, const T &);
-  void reserve(size_type);
-  void shrink_to_fit();
+  inline vector(typename vector<T>::iterator first, typename vector<T>::iterator last) {
+    size_type count = last - first;
+    rsrv_sz = count << 2;
+    arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
+    std::uninitialized_copy(first, last, arr);
+    vec_sz = count;
+  }
 
-  // element access
-  reference operator[](size_type);
-  const_reference operator[](size_type) const;
-  reference at(size_type);
-  const_reference at(size_type) const;
-  reference front();
-  const_reference front() const;
-  reference back();
-  const_reference back() const;
+  inline vector(std::initializer_list<T> lst) {
+    rsrv_sz = lst.size() << 2;
+    arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
+    std::uninitialized_copy(lst.begin(), lst.end(), arr);
+    vec_sz = lst.size();
+  }
 
-  // 23.3.11.4, data access:
-  T *data() noexcept;
-  const T *data() const noexcept;
+  inline vector(const vector<T> &other) {
+    rsrv_sz = other.rsrv_sz;
+    arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
+    std::uninitialized_copy(other.arr, other.arr + other.vec_sz, arr);
+    vec_sz = other.vec_sz;
+  }
 
-  // 23.3.11.5, modifiers:
+  inline vector(vector<T> &&other) noexcept {
+    rsrv_sz = other.rsrv_sz;
+    vec_sz = other.vec_sz;
+    arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
+    std::uninitialized_move(other.arr, other.arr + vec_sz, arr);
+    other.vec_sz = 0;
+    other.arr = nullptr;
+    other.rsrv_sz = 0;
+  }
+
+  ~vector() {
+    if (arr) {
+      delete[] arr;
+    }
+  }
+
+  inline vector<T> &operator=(const vector<T> &other) {
+    if (this != &other) {
+      ensure_capacity(other.vec_sz);
+      std::copy(other.arr, other.arr + other.vec_sz, arr);
+      vec_sz = other.vec_sz;
+    }
+    return *this;
+  }
+
+  inline vector<T> &operator=(vector<T> &&other) {
+    if (this != &other) {
+      ensure_capacity(other.vec_sz);
+      std::move(other.arr, other.arr + other.vec_sz, arr);
+      vec_sz = other.vec_sz;
+      other.vec_sz = 0;
+      other.arr = nullptr;
+      other.rsrv_sz = 0;
+    }
+    return *this;
+  }
+
+  inline vector<T> &operator=(std::initializer_list<T> lst) {
+    ensure_capacity(lst.size());
+    std::copy(lst.begin(), lst.end(), arr);
+    vec_sz = static_cast<size_type>(lst.size());
+    return *this;
+  }
+
+  inline void assign(typename vector<T>::size_type count, const T &value) {
+    ensure_capacity(count);
+    std::fill(arr, arr + count, value);
+    vec_sz = count;
+  }
+
+  inline void assign(typename vector<T>::iterator first, typename vector<T>::iterator last) {
+    size_type count = static_cast<size_type>(last - first);
+    ensure_capacity(count);
+    std::copy(first, last, arr);
+    vec_sz = count;
+  }
+
+  inline void assign(std::initializer_list<T> lst) {
+    size_type count = static_cast<size_type>(lst.size());
+    ensure_capacity(count);
+    std::copy(lst.begin(), lst.end(), arr);
+    vec_sz = count;
+  }
+
+  inline typename vector<T>::iterator begin() noexcept { return arr; }
+
+  inline typename vector<T>::const_iterator begin() const noexcept { return arr; }
+
+  inline typename vector<T>::const_iterator cbegin() const noexcept { return arr; }
+
+  inline typename vector<T>::iterator end() noexcept { return arr + vec_sz; }
+
+  inline typename vector<T>::const_iterator end() const noexcept { return arr + vec_sz; }
+
+  inline typename vector<T>::const_iterator cend() const noexcept { return arr + vec_sz; }
+
+  inline typename vector<T>::reverse_iterator rbegin() noexcept {
+    return reverse_iterator(arr + vec_sz);
+  }
+
+  inline typename vector<T>::const_reverse_iterator crbegin() const noexcept {
+    return reverse_iterator(arr + vec_sz);
+  }
+
+  inline typename vector<T>::reverse_iterator rend() noexcept { return reverse_iterator(arr); }
+
+  inline typename vector<T>::const_reverse_iterator crend() const noexcept {
+    return reverse_iterator(arr);
+  }
+
+  inline bool empty() const noexcept { return vec_sz == 0; }
+
+  inline typename vector<T>::size_type size() const noexcept { return vec_sz; }
+
+  inline typename vector<T>::size_type max_size() const noexcept { return CATZ_VECTOR_MAX_SZ; }
+
+  inline typename vector<T>::size_type capacity() const noexcept { return rsrv_sz; }
+
+  inline void reserve(typename vector<T>::size_type _sz) {
+    if (_sz > rsrv_sz) {
+      rsrv_sz = _sz;
+      reallocate();
+    }
+  }
+
+  inline void shrink_to_fit() {
+    if (rsrv_sz != vec_sz) {
+      rsrv_sz = vec_sz;
+      reallocate();
+    }
+  }
+
+  inline typename vector<T>::reference operator[](typename vector<T>::size_type idx) {
+    return arr[idx];
+  }
+
+  inline typename vector<T>::const_reference operator[](typename vector<T>::size_type idx) const {
+    return arr[idx];
+  }
+
+  inline typename vector<T>::reference at(vector<T>::size_type pos) {
+    return (pos < vec_sz) ? arr[pos] : throw std::out_of_range("accessed position is out of range");
+  }
+
+  inline typename vector<T>::const_reference at(vector<T>::size_type pos) const {
+    return (pos < vec_sz) ? arr[pos] : throw std::out_of_range("accessed position is out of range");
+  }
+
+  inline typename vector<T>::reference front() { return arr[0]; }
+
+  inline typename vector<T>::const_reference front() const { return arr[0]; }
+
+  inline typename vector<T>::reference back() { return arr[vec_sz - 1]; }
+
+  inline typename vector<T>::const_reference back() const { return arr[vec_sz - 1]; }
+
+  inline T *data() noexcept { return arr; }
+
+  inline const T *data() const noexcept { return arr; }
+
   template <class... Args>
-  void emplace_back(Args &&...args);
-  void push_back(const T &);
-  void push_back(T &&);
-  void pop_back();
+  inline void emplace_back(Args &&...args) {
+    if (vec_sz == rsrv_sz) {
+      rsrv_sz <<= 2;
+      reallocate();
+    }
+    arr[vec_sz] = std::move(T(std::forward<Args>(args)...));
+    ++vec_sz;
+  }
+
+  inline void push_back(const T &val) {
+    if (vec_sz == rsrv_sz) {
+      rsrv_sz <<= 2;
+      reallocate();
+    }
+    arr[vec_sz] = val;
+    ++vec_sz;
+  }
+
+  inline void push_back(T &&val) {
+    if (vec_sz == rsrv_sz) {
+      rsrv_sz <<= 2;
+      reallocate();
+    }
+    arr[vec_sz] = std::move(val);
+    ++vec_sz;
+  }
+
+  inline void pop_back() {
+    --vec_sz;
+    if constexpr (!std::is_trivially_destructible<T>::value) {
+      arr[vec_sz].~T();
+    }
+  }
 
   template <class... Args>
-  iterator emplace(const_iterator, Args &&...);
-  iterator insert(const_iterator, const T &);
-  iterator insert(const_iterator, T &&);
-  iterator insert(const_iterator, size_type, const T &);
+  inline typename vector<T>::iterator emplace(
+      typename vector<T>::const_iterator it, Args &&...args) {
+    iterator iit = &arr[it - arr];
+    if (vec_sz == rsrv_sz) {
+      rsrv_sz <<= 2;
+      reallocate();
+    }
+    memmove(iit + 1, iit, (vec_sz - (it - arr)) * sizeof(T));
+    (*iit) = std::move(T(std::forward<Args>(args)...));
+    ++vec_sz;
+    return iit;
+  }
+
+  inline typename vector<T>::iterator insert(typename vector<T>::const_iterator it, const T &val) {
+    iterator iit = &arr[it - arr];
+    if (vec_sz == rsrv_sz) {
+      rsrv_sz <<= 2;
+      reallocate();
+    }
+    memmove(iit + 1, iit, (vec_sz - (it - arr)) * sizeof(T));
+    (*iit) = val;
+    ++vec_sz;
+    return iit;
+  }
+
+  inline typename vector<T>::iterator insert(typename vector<T>::const_iterator it, T &&val) {
+    iterator iit = &arr[it - arr];
+    if (vec_sz == rsrv_sz) {
+      rsrv_sz <<= 2;
+      reallocate();
+    }
+    memmove(iit + 1, iit, (vec_sz - (it - arr)) * sizeof(T));
+    (*iit) = std::move(val);
+    ++vec_sz;
+    return iit;
+  }
+
+  inline typename vector<T>::iterator insert(
+      typename vector<T>::const_iterator it, typename vector<T>::size_type cnt, const T &val) {
+    iterator f = &arr[it - arr];
+    if (!cnt) return f;
+    if (vec_sz + cnt > rsrv_sz) {
+      rsrv_sz = (vec_sz + cnt) << 2;
+      reallocate();
+    }
+    memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
+    vec_sz += cnt;
+    for (iterator cur = f; cnt--; ++cur) (*cur) = val;
+    return f;
+  }
+
   template <class InputIt>
-  iterator insert(const_iterator, InputIt, InputIt);
-  iterator insert(const_iterator, std::initializer_list<T>);
-  iterator erase(const_iterator);
-  iterator erase(const_iterator, const_iterator);
-  void swap(vector<T> &);
-  void clear() noexcept;
+  inline typename vector<T>::iterator insert(
+      typename vector<T>::const_iterator it, InputIt first, InputIt last) {
+    iterator f = &arr[it - arr];
+    size_type cnt = static_cast<size_type>(last - first);
+    if (!cnt) return f;
+    if (vec_sz + cnt > rsrv_sz) {
+      rsrv_sz = (vec_sz + cnt) << 2;
+      reallocate();
+    }
+    memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
+    for (iterator cur = f; first != last; ++cur, ++first) (*cur) = *first;
+    vec_sz += cnt;
+    return f;
+  }
 
-  bool operator==(const vector<T> &) const;
-  bool operator!=(const vector<T> &) const;
+  inline typename vector<T>::iterator insert(
+      typename vector<T>::const_iterator it, std::initializer_list<T> lst) {
+    size_type cnt = lst.size();
+    iterator f = &arr[it - arr];
+    if (!cnt) return f;
+    if (vec_sz + cnt > rsrv_sz) {
+      rsrv_sz = (vec_sz + cnt) << 2;
+      reallocate();
+    }
+    memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
+    iterator iit = f;
+    for (auto &item : lst) {
+      (*iit) = item;
+      ++iit;
+    }
+    vec_sz += cnt;
+    return f;
+  }
+
+  inline typename vector<T>::iterator erase(typename vector<T>::const_iterator it) {
+    iterator iit = &arr[it - arr];
+    if constexpr (!std::is_trivially_destructible<T>::value) {
+      (*iit).~T();
+    }
+    memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(T));
+    --vec_sz;
+    return iit;
+  }
+
+  inline typename vector<T>::iterator erase(
+      typename vector<T>::const_iterator first, typename vector<T>::const_iterator last) {
+    iterator f = &arr[first - arr];
+    if (first == last) return f;
+    if constexpr (!std::is_trivially_destructible<T>::value) {
+      for (; first != last; ++first) {
+        (*first).~T();
+      }
+    }
+    memmove(f, last, (vec_sz - (last - arr)) * sizeof(T));
+    vec_sz -= last - first;
+    return f;
+  }
+
+  inline void swap(vector<T> &rhs) {
+    std::swap(vec_sz, rhs.vec_sz);
+    std::swap(rsrv_sz, rhs.rsrv_sz);
+    std::swap(arr, rhs.arr);
+  }
+
+  inline void clear() noexcept {
+    if constexpr (!std::is_trivially_destructible<T>::value) {
+      for (size_type i = 0; i < vec_sz; ++i) {
+        arr[i].~T();
+      }
+    }
+    vec_sz = 0;
+  }
+
+  inline bool operator==(const vector<T> &rhs) const {
+    if (vec_sz != rhs.vec_sz) return false;
+    size_type i;
+    for (i = 0; i < vec_sz; ++i)
+      if (arr[i] != rhs.arr[i]) return false;
+    return true;
+  }
+
+  inline bool operator!=(const vector<T> &rhs) const {
+    if (vec_sz != rhs.vec_sz) return true;
+    size_type i;
+    for (i = 0; i < vec_sz; ++i)
+      if (arr[i] != rhs.arr[i]) return true;
+    return false;
+  }
   bool operator<(const vector<T> &rhs) const { return compare(rhs, std::less<T>()); }
   bool operator<=(const vector<T> &rhs) const { return compare(rhs, std::less_equal<T>()); }
   bool operator>(const vector<T> &rhs) const { return compare(rhs, std::greater<T>()); }
   bool operator>=(const vector<T> &rhs) const { return compare(rhs, std::greater_equal<T>()); }
 
+  inline void resize(typename vector<T>::size_type sz) {
+    if (sz > vec_sz) {
+      if (sz > rsrv_sz) {
+        rsrv_sz = sz;
+        reallocate();
+      }
+    } else {
+      size_type i;
+      for (i = vec_sz; i < sz; ++i) arr[i].~T();
+    }
+    vec_sz = sz;
+  }
+
+  inline void resize(typename vector<T>::size_type sz, const T &c) {
+    if (sz > vec_sz) {
+      if (sz > rsrv_sz) {
+        rsrv_sz = sz;
+        reallocate();
+      }
+      size_type i;
+      for (i = vec_sz; i < sz; ++i) arr[i] = c;
+    } else {
+      size_type i;
+      for (i = vec_sz; i < sz; ++i) arr[i].~T();
+    }
+    vec_sz = sz;
+  }
+
   friend void Print(const vector<T> &v, const std::string &vec_name);
 
  private:
-  size_type rsrv_sz = 4;
-  size_type vec_sz = 0;
-  T *arr;
-
-  inline void ensure_capacity(size_type required_sz) {
+  inline void ensure_capacity(vector<T>::size_type required_sz) {
     if (required_sz > rsrv_sz) {
       rsrv_sz = required_sz << 2;
       reallocate();
@@ -130,503 +433,17 @@ class vector {
     }
     return comp(static_cast<T>(vec_sz), static_cast<T>(rhs.vec_sz));
   }
-  inline void reallocate();
-};
-
-template <typename T>
-inline vector<T>::vector() noexcept {
-  arr = new T[rsrv_sz];
-}
-
-template <typename T>
-inline vector<T>::vector(typename vector<T>::size_type n) {
-  rsrv_sz = n << 2;
-  arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
-  std::uninitialized_default_construct_n(arr, n);
-  vec_sz = n;
-}
-
-template <typename T>
-inline vector<T>::vector(typename vector<T>::size_type n, const T &value) {
-  rsrv_sz = n << 2;
-  arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
-  std::uninitialized_fill_n(arr, n, value);
-  vec_sz = n;
-}
-
-template <typename T>
-inline vector<T>::vector(typename vector<T>::iterator first, typename vector<T>::iterator last) {
-  size_type count = last - first;
-  rsrv_sz = count << 2;
-  arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
-  std::uninitialized_copy(first, last, arr);
-  vec_sz = count;
-}
-
-template <typename T>
-inline vector<T>::vector(std::initializer_list<T> lst) {
-  rsrv_sz = lst.size() << 2;
-  arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
-  std::uninitialized_copy(lst.begin(), lst.end(), arr);
-  vec_sz = lst.size();
-}
-
-template <typename T>
-inline vector<T>::vector(const vector<T> &other) {
-  rsrv_sz = other.rsrv_sz;
-  arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
-  std::uninitialized_copy(other.arr, other.arr + other.vec_sz, arr);
-  vec_sz = other.vec_sz;
-}
-
-template <typename T>
-inline vector<T>::vector(vector<T> &&other) noexcept {
-  rsrv_sz = other.rsrv_sz;
-  vec_sz = other.vec_sz;
-  arr = static_cast<T *>(operator new[](rsrv_sz * sizeof(T)));
-  std::uninitialized_move(other.arr, other.arr + vec_sz, arr);
-  other.vec_sz = 0;
-  other.arr = nullptr;
-  other.rsrv_sz = 0;
-}
-
-template <typename T>
-inline vector<T>::~vector() {
-  if (arr) {
+  inline void reallocate() {
+    T *tarr = new (std::nothrow) T[rsrv_sz];
+    memcpy(tarr, arr, vec_sz * sizeof(T));
     delete[] arr;
+    arr = tarr;
   }
-}
-template <typename T>
-inline vector<T> &vector<T>::operator=(const vector<T> &other) {
-  if (this != &other) {
-    ensure_capacity(other.vec_sz);
-    std::copy(other.arr, other.arr + other.vec_sz, arr);
-    vec_sz = other.vec_sz;
-  }
-  return *this;
-}
 
-template <typename T>
-inline vector<T> &vector<T>::operator=(vector<T> &&other) {
-  if (this != &other) {
-    ensure_capacity(other.vec_sz);
-    std::move(other.arr, other.arr + other.vec_sz, arr);
-    vec_sz = other.vec_sz;
-    other.vec_sz = 0;
-    other.arr = nullptr;
-    other.rsrv_sz = 0;
-  }
-  return *this;
-}
-
-template <typename T>
-inline vector<T> &vector<T>::operator=(std::initializer_list<T> lst) {
-  ensure_capacity(lst.size());
-  std::copy(lst.begin(), lst.end(), arr);
-  vec_sz = static_cast<size_type>(lst.size());
-  return *this;
-}
-
-template <typename T>
-inline void vector<T>::assign(typename vector<T>::size_type count, const T &value) {
-  ensure_capacity(count);
-  std::fill(arr, arr + count, value);
-  vec_sz = count;
-}
-
-template <typename T>
-inline void vector<T>::assign(
-    typename vector<T>::iterator first, typename vector<T>::iterator last) {
-  size_type count = static_cast<size_type>(last - first);
-  ensure_capacity(count);
-  std::copy(first, last, arr);
-  vec_sz = count;
-}
-
-template <typename T>
-inline void vector<T>::assign(std::initializer_list<T> lst) {
-  size_type count = static_cast<size_type>(lst.size());
-  ensure_capacity(count);
-  std::copy(lst.begin(), lst.end(), arr);
-  vec_sz = count;
-}
-
-template <typename T>
-inline typename vector<T>::iterator vector<T>::begin() noexcept {
-  return arr;
-}
-
-template <typename T>
-inline typename vector<T>::const_iterator vector<T>::begin() const noexcept {
-  return arr;
-}
-
-template <typename T>
-inline typename vector<T>::const_iterator vector<T>::cbegin() const noexcept {
-  return arr;
-}
-
-template <typename T>
-inline typename vector<T>::iterator vector<T>::end() noexcept {
-  return arr + vec_sz;
-}
-
-template <typename T>
-inline typename vector<T>::const_iterator vector<T>::end() const noexcept {
-  return arr + vec_sz;
-}
-
-template <typename T>
-inline typename vector<T>::const_iterator vector<T>::cend() const noexcept {
-  return arr + vec_sz;
-}
-
-template <typename T>
-inline typename vector<T>::reverse_iterator vector<T>::rbegin() noexcept {
-  return reverse_iterator(arr + vec_sz);
-}
-
-template <typename T>
-inline typename vector<T>::const_reverse_iterator vector<T>::crbegin() const noexcept {
-  return reverse_iterator(arr + vec_sz);
-}
-
-template <typename T>
-inline typename vector<T>::reverse_iterator vector<T>::rend() noexcept {
-  return reverse_iterator(arr);
-}
-
-template <typename T>
-inline typename vector<T>::const_reverse_iterator vector<T>::crend() const noexcept {
-  return reverse_iterator(arr);
-}
-
-template <typename T>
-inline void vector<T>::reallocate() {
-  T *tarr = new (std::nothrow) T[rsrv_sz];
-  memcpy(tarr, arr, vec_sz * sizeof(T));
-  delete[] arr;
-  arr = tarr;
-}
-
-template <typename T>
-inline bool vector<T>::empty() const noexcept {
-  return vec_sz == 0;
-}
-
-template <typename T>
-inline typename vector<T>::size_type vector<T>::size() const noexcept {
-  return vec_sz;
-}
-
-template <typename T>
-inline typename vector<T>::size_type vector<T>::max_size() const noexcept {
-  return CATZ_VECTOR_MAX_SZ;
-}
-
-template <typename T>
-inline typename vector<T>::size_type vector<T>::capacity() const noexcept {
-  return rsrv_sz;
-}
-
-template <typename T>
-inline void vector<T>::reserve(typename vector<T>::size_type _sz) {
-  if (_sz > rsrv_sz) {
-    rsrv_sz = _sz;
-    reallocate();
-  }
-}
-
-template <typename T>
-inline void vector<T>::shrink_to_fit() {
-  if (rsrv_sz != vec_sz) {
-    rsrv_sz = vec_sz;
-    reallocate();
-  }
-}
-
-template <typename T>
-inline typename vector<T>::reference vector<T>::operator[](typename vector<T>::size_type idx) {
-  return arr[idx];
-}
-
-template <typename T>
-inline typename vector<T>::const_reference vector<T>::operator[](
-    typename vector<T>::size_type idx) const {
-  return arr[idx];
-}
-
-template <typename T>
-inline typename vector<T>::reference vector<T>::at(size_type pos) {
-  return (pos < vec_sz) ? arr[pos] : throw std::out_of_range("accessed position is out of range");
-}
-
-template <typename T>
-inline typename vector<T>::const_reference vector<T>::at(size_type pos) const {
-  return (pos < vec_sz) ? arr[pos] : throw std::out_of_range("accessed position is out of range");
-}
-
-template <typename T>
-inline typename vector<T>::reference vector<T>::front() {
-  return arr[0];
-}
-
-template <typename T>
-inline typename vector<T>::const_reference vector<T>::front() const {
-  return arr[0];
-}
-
-template <typename T>
-inline typename vector<T>::reference vector<T>::back() {
-  return arr[vec_sz - 1];
-}
-
-template <typename T>
-inline typename vector<T>::const_reference vector<T>::back() const {
-  return arr[vec_sz - 1];
-}
-
-template <typename T>
-inline T *vector<T>::data() noexcept {
-  return arr;
-}
-
-template <typename T>
-inline const T *vector<T>::data() const noexcept {
-  return arr;
-}
-
-template <typename T>
-template <class... Args>
-inline void vector<T>::emplace_back(Args &&...args) {
-  if (vec_sz == rsrv_sz) {
-    rsrv_sz <<= 2;
-    reallocate();
-  }
-  arr[vec_sz] = std::move(T(std::forward<Args>(args)...));
-  ++vec_sz;
-}
-
-template <typename T>
-inline void vector<T>::push_back(const T &val) {
-  if (vec_sz == rsrv_sz) {
-    rsrv_sz <<= 2;
-    reallocate();
-  }
-  arr[vec_sz] = val;
-  ++vec_sz;
-}
-
-template <typename T>
-inline void vector<T>::push_back(T &&val) {
-  if (vec_sz == rsrv_sz) {
-    rsrv_sz <<= 2;
-    reallocate();
-  }
-  arr[vec_sz] = std::move(val);
-  ++vec_sz;
-}
-
-template <typename T>
-inline void vector<T>::pop_back() {
-  --vec_sz;
-  if constexpr (!std::is_trivially_destructible<T>::value) {
-    arr[vec_sz].~T();
-  }
-}
-
-template <typename T>
-template <class... Args>
-inline typename vector<T>::iterator vector<T>::emplace(
-    typename vector<T>::const_iterator it, Args &&...args) {
-  iterator iit = &arr[it - arr];
-  if (vec_sz == rsrv_sz) {
-    rsrv_sz <<= 2;
-    reallocate();
-  }
-  memmove(iit + 1, iit, (vec_sz - (it - arr)) * sizeof(T));
-  (*iit) = std::move(T(std::forward<Args>(args)...));
-  ++vec_sz;
-  return iit;
-}
-
-template <typename T>
-inline typename vector<T>::iterator vector<T>::insert(
-    typename vector<T>::const_iterator it, const T &val) {
-  iterator iit = &arr[it - arr];
-  if (vec_sz == rsrv_sz) {
-    rsrv_sz <<= 2;
-    reallocate();
-  }
-  memmove(iit + 1, iit, (vec_sz - (it - arr)) * sizeof(T));
-  (*iit) = val;
-  ++vec_sz;
-  return iit;
-}
-
-template <typename T>
-inline typename vector<T>::iterator vector<T>::insert(
-    typename vector<T>::const_iterator it, T &&val) {
-  iterator iit = &arr[it - arr];
-  if (vec_sz == rsrv_sz) {
-    rsrv_sz <<= 2;
-    reallocate();
-  }
-  memmove(iit + 1, iit, (vec_sz - (it - arr)) * sizeof(T));
-  (*iit) = std::move(val);
-  ++vec_sz;
-  return iit;
-}
-template <typename T>
-inline typename vector<T>::iterator vector<T>::insert(
-    typename vector<T>::const_iterator it, typename vector<T>::size_type cnt, const T &val) {
-  iterator f = &arr[it - arr];
-  if (!cnt) return f;
-  if (vec_sz + cnt > rsrv_sz) {
-    rsrv_sz = (vec_sz + cnt) << 2;
-    reallocate();
-  }
-  memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
-  vec_sz += cnt;
-  for (iterator cur = f; cnt--; ++cur) (*cur) = val;
-  return f;
-}
-
-template <typename T>
-template <class InputIt>
-inline typename vector<T>::iterator vector<T>::insert(
-    typename vector<T>::const_iterator it, InputIt first, InputIt last) {
-  iterator f = &arr[it - arr];
-  size_type cnt = static_cast<size_type>(last - first);
-  if (!cnt) return f;
-  if (vec_sz + cnt > rsrv_sz) {
-    rsrv_sz = (vec_sz + cnt) << 2;
-    reallocate();
-  }
-  memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
-  for (iterator cur = f; first != last; ++cur, ++first) (*cur) = *first;
-  vec_sz += cnt;
-  return f;
-}
-
-template <typename T>
-inline typename vector<T>::iterator vector<T>::insert(
-    typename vector<T>::const_iterator it, std::initializer_list<T> lst) {
-  size_type cnt = lst.size();
-  iterator f = &arr[it - arr];
-  if (!cnt) return f;
-  if (vec_sz + cnt > rsrv_sz) {
-    rsrv_sz = (vec_sz + cnt) << 2;
-    reallocate();
-  }
-  memmove(f + cnt, f, (vec_sz - (it - arr)) * sizeof(T));
-  iterator iit = f;
-  for (auto &item : lst) {
-    (*iit) = item;
-    ++iit;
-  }
-  vec_sz += cnt;
-  return f;
-}
-
-template <typename T>
-inline typename vector<T>::iterator vector<T>::erase(typename vector<T>::const_iterator it) {
-  iterator iit = &arr[it - arr];
-  if constexpr (!std::is_trivially_destructible<T>::value) {
-    (*iit).~T();
-  }
-  memmove(iit, iit + 1, (vec_sz - (it - arr) - 1) * sizeof(T));
-  --vec_sz;
-  return iit;
-}
-
-template <typename T>
-inline typename vector<T>::iterator vector<T>::erase(
-    typename vector<T>::const_iterator first, typename vector<T>::const_iterator last) {
-  iterator f = &arr[first - arr];
-  if (first == last) return f;
-  if constexpr (!std::is_trivially_destructible<T>::value) {
-    for (; first != last; ++first) {
-      (*first).~T();
-    }
-  }
-  memmove(f, last, (vec_sz - (last - arr)) * sizeof(T));
-  vec_sz -= last - first;
-  return f;
-}
-
-template <typename T>
-inline void vector<T>::swap(vector<T> &rhs) {
-  size_t tvec_sz = vec_sz, trsrv_sz = rsrv_sz;
-  T *tarr = arr;
-
-  vec_sz = rhs.vec_sz;
-  rsrv_sz = rhs.rsrv_sz;
-  arr = rhs.arr;
-
-  rhs.vec_sz = tvec_sz;
-  rhs.rsrv_sz = trsrv_sz;
-  rhs.arr = tarr;
-}
-
-template <typename T>
-inline void vector<T>::clear() noexcept {
-  if constexpr (!std::is_trivially_destructible<T>::value) {
-    for (size_type i = 0; i < vec_sz; ++i) {
-      arr[i].~T();
-    }
-  }
-  vec_sz = 0;
-}
-
-template <typename T>
-inline bool vector<T>::operator==(const vector<T> &rhs) const {
-  if (vec_sz != rhs.vec_sz) return false;
-  size_type i;
-  for (i = 0; i < vec_sz; ++i)
-    if (arr[i] != rhs.arr[i]) return false;
-  return true;
-}
-
-template <typename T>
-inline bool vector<T>::operator!=(const vector<T> &rhs) const {
-  if (vec_sz != rhs.vec_sz) return true;
-  size_type i;
-  for (i = 0; i < vec_sz; ++i)
-    if (arr[i] != rhs.arr[i]) return true;
-  return false;
-}
-
-template <typename T>
-inline void vector<T>::resize(typename vector<T>::size_type sz) {
-  if (sz > vec_sz) {
-    if (sz > rsrv_sz) {
-      rsrv_sz = sz;
-      reallocate();
-    }
-  } else {
-    size_type i;
-    for (i = vec_sz; i < sz; ++i) arr[i].~T();
-  }
-  vec_sz = sz;
-}
-
-template <typename T>
-inline void vector<T>::resize(typename vector<T>::size_type sz, const T &c) {
-  if (sz > vec_sz) {
-    if (sz > rsrv_sz) {
-      rsrv_sz = sz;
-      reallocate();
-    }
-    size_type i;
-    for (i = vec_sz; i < sz; ++i) arr[i] = c;
-  } else {
-    size_type i;
-    for (i = vec_sz; i < sz; ++i) arr[i].~T();
-  }
-  vec_sz = sz;
-}
-
+  vector<T>::size_type rsrv_sz = 4;
+  vector<T>::size_type vec_sz = 0;
+  T *arr;
+};
 template <typename T>
 inline void Print(const vector<T> &v, const std::string &vec_name) {
   typename vector<T>::size_type i = 0;
@@ -634,7 +451,6 @@ inline void Print(const vector<T> &v, const std::string &vec_name) {
     std::cout << vec_name << "[" << i++ << "] = " << item << std::endl;
   }
 }
-
 }  // namespace lni
 
 #endif  // CATZ_VECTOR
